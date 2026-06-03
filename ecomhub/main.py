@@ -1,11 +1,15 @@
 """Orquestrador do robo EcomHub.
 
 Uso:
-    python main.py capture   # faz login e captura o JSON productsWorkspaces
+    python main.py capture   # faz login e captura o JSON de produtos
+    python main.py unify     # atualiza a tabela unificada (unified_catalog) sem dropar
+    python main.py all       # captura + unify (padrao)
+
+Comandos legados (banco proprio per-projeto via Prisma; NAO usar com a tabela
+unificada, pois `prisma db push` reseta/dropa a tabela):
     python main.py schema    # gera prisma/schema.prisma a partir do JSON
-    python main.py push      # cria as tabelas no Postgres (prisma db push) + gera o client
-    python main.py import     # importa o JSON capturado para o banco
-    python main.py all       # executa todas as etapas em sequencia (padrao)
+    python main.py push      # prisma db push + gera o client (DESTRUTIVO)
+    python main.py import    # importa o JSON capturado para o banco per-projeto
 """
 
 from __future__ import annotations
@@ -66,11 +70,21 @@ def step_import() -> None:
     run_import()
 
 
+def step_unify() -> None:
+    print("\n=== ETAPA: UNIFICAR EM unified_catalog (sem dropar) ===")
+    # Roda o unificador da raiz do projeto (shopfy/unify_catalog.py), que le os
+    # JSONs do ecomhub e do primecod e atualiza a tabela unificada mantendo
+    # TODOS os campos das duas integracoes.
+    unifier = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "unify_catalog.py")
+    subprocess.run([sys.executable, unifier], check=True)
+
+
 STEPS = {
     "capture": step_capture,
     "schema": step_schema,
     "push": step_push,
     "import": step_import,
+    "unify": step_unify,
 }
 
 
@@ -79,9 +93,7 @@ def main() -> None:
 
     if arg == "all":
         step_capture()
-        step_schema()
-        step_push()
-        step_import()
+        step_unify()
         print("\n>>> Pipeline completa com sucesso!")
     elif arg in STEPS:
         STEPS[arg]()

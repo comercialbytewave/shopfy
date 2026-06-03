@@ -205,7 +205,16 @@ MAX_PAGES = 1000
 
 async def capture() -> dict[str, Any]:
     """Executa o fluxo completo, pagina via `offset` e retorna todos os registros."""
-    captured: dict[str, Any] = {}
+    # O endpoint /api/products responde de VARIAS formas na mesma pagina:
+    #   - metadados (definicao das colunas, sem registros) -> ignoramos
+    #   - widgets/atalhos com poucos registros e poucos campos (ex.: 2 itens
+    #     com createdAt/id/isActive/name) -> NAO sao a lista de produtos
+    #   - a lista real de produtos (48 por pagina, registros "ricos")
+    # Por causa disso, em vez de pegar a 1a resposta, coletamos todas as
+    # candidatas com registros e, no fim, escolhemos a melhor (mais registros,
+    # desempatando pela que tem registros com mais campos).
+    candidates: list[dict[str, Any]] = []
+    seen_urls: set[str] = set()
     capture_event = asyncio.Event()
 
     async with async_playwright() as p:
@@ -215,19 +224,28 @@ async def capture() -> dict[str, Any]:
 
         async def on_response(response: Response) -> None:
             if response.url.startswith(config.API_PREFIX) and response.request.method == "GET":
-                if "body" in captured:
-                    return  # ja temos a primeira pagina (base da paginacao)
+                if response.url in seen_urls:
+                    return
                 try:
                     body = await response.json()
                 except Exception:
                     return
-                captured["url"] = response.url
-                captured["status"] = response.status
-                captured["body"] = body
-                captured["headers"] = _auth_headers(await response.request.all_headers())
+                recs = extract_records(body)
+                if not recs:
+                    return  # metadados / resposta sem registros
+                seen_urls.add(response.url)
+                candidates.append(
+                    {
+                        "url": response.url,
+                        "status": response.status,
+                        "body": body,
+                        "records": recs,
+                        "headers": _auth_headers(await response.request.all_headers()),
+                    }
+                )
                 print(
-                    f"  [captura] 1a pagina capturada ({response.status}) - "
-                    f"{_record_count(body)} registro(s)"
+                    f"  [captura] candidato ({response.status}) - {len(recs)} "
+                    f"registro(s) <- {urlparse(response.url).path}"
                 )
                 capture_event.set()
 
@@ -257,19 +275,33 @@ async def capture() -> dict[str, Any]:
             if not clicked:
                 await page.goto(config.PRODUCTS_URL, wait_until="networkidle")
 
-            print("[3/3] Aguardando a chamada da API productsWorkspaces...")
+            print("[3/3] Aguardando a chamada da API de produtos...")
             try:
                 await asyncio.wait_for(capture_event.wait(), timeout=30)
             except asyncio.TimeoutError:
                 pass
-            await page.wait_for_timeout(2000)
+            # Janela extra para coletar respostas concorrentes (a decoy e a lista
+            # real chegam quase juntas) antes de escolher a melhor.
+            await page.wait_for_timeout(3000)
 
-            if "body" not in captured:
+            if not candidates:
                 await _save_debug(page, "sem_captura")
                 raise RuntimeError(
-                    "Nao foi capturada nenhuma resposta de "
+                    "Nao foi capturada nenhuma resposta com registros de "
                     f"{config.API_PREFIX}. Veja ./debug para investigar."
                 )
+
+            # Escolhe a resposta com mais registros (a lista real de produtos),
+            # desempatando pela que tem registros com mais campos.
+            def _richness(c: dict[str, Any]) -> tuple[int, int]:
+                max_keys = max((len(r) for r in c["records"]), default=0)
+                return (len(c["records"]), max_keys)
+
+            captured = max(candidates, key=_richness)
+            print(
+                f"  [captura] escolhida resposta com {len(captured['records'])} "
+                f"registro(s) <- {urlparse(captured['url']).path}"
+            )
 
             # ---- Paginacao: percorre offset=1,2,3... ate acabar ou dar erro ----
             base_url = captured["url"]
