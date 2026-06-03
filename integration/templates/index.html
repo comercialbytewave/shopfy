@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Integração Shopify — {{ integration }}</title>
+  <style>
+    :root { color-scheme: light dark; }
+    body { font-family: system-ui, sans-serif; margin: 0; padding: 24px; background:#0f1115; color:#e7e9ee; }
+    h1 { font-size: 20px; margin: 0 0 4px; }
+    .muted { color:#9aa3b2; font-size: 13px; }
+    .bar { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin:16px 0; }
+    .tabs a, .filters a { text-decoration:none; padding:6px 12px; border-radius:8px; color:#cdd3df; background:#1b1f29; margin-right:6px; font-size:13px; }
+    .tabs a.active, .filters a.active { background:#3457d5; color:#fff; }
+    button { background:#3457d5; color:#fff; border:0; padding:8px 14px; border-radius:8px; cursor:pointer; font-size:13px; }
+    button.ghost { background:#1b1f29; color:#cdd3df; }
+    table { width:100%; border-collapse:collapse; margin-top:12px; font-size:13px; }
+    th, td { text-align:left; padding:8px 10px; border-bottom:1px solid #232838; }
+    th { color:#9aa3b2; font-weight:600; position:sticky; top:0; background:#0f1115; }
+    .badge { padding:2px 8px; border-radius:999px; font-size:11px; font-weight:600; }
+    .yes { background:#123524; color:#36d27a; }
+    .no  { background:#3a2014; color:#ff9d5c; }
+    .sent{ background:#1d2a4d; color:#7aa2ff; }
+    .stat { display:inline-block; background:#1b1f29; border-radius:8px; padding:8px 12px; margin-right:8px; }
+    .stat b { font-size:16px; }
+    .flash { padding:8px 12px; border-radius:8px; margin:6px 0; font-size:13px; }
+    .flash.ok { background:#123524; color:#9af5c0; }
+    .flash.err{ background:#3a1414; color:#ff9c9c; }
+    .warn { background:#3a3214; color:#ffe08a; padding:8px 12px; border-radius:8px; font-size:13px; margin:8px 0; }
+    code { background:#1b1f29; padding:1px 5px; border-radius:4px; }
+  </style>
+</head>
+<body>
+  <h1>Integração Shopify</h1>
+  <div class="muted">
+    Loja: <code>{{ store or "—" }}</code>
+    {% if not has_creds %}· <span style="color:#ffe08a">sem credenciais Shopify</span>{% endif %}
+  </div>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for cat, msg in messages %}<div class="flash {{ cat }}">{{ msg }}</div>{% endfor %}
+  {% endwith %}
+
+  {% if not has_creds %}
+    <div class="warn">
+      Sem <code>SHOPIFY_STORE_DOMAIN</code>/<code>SHOPIFY_ACCESS_TOKEN</code> no <code>.env</code>.
+      A sincronização marca tudo como “não cadastrado” e o envio fica indisponível.
+    </div>
+  {% endif %}
+
+  <div class="bar tabs">
+    {% for it in integrations %}
+      <a class="{{ 'active' if it == integration }}" href="{{ url_for('index', integration=it, only=only if only!='all' else None) }}">{{ it }}</a>
+    {% endfor %}
+  </div>
+
+  <div class="bar">
+    <span class="stat">Total <b>{{ stats.total }}</b></span>
+    <span class="stat">Na Shopify <b style="color:#36d27a">{{ stats.present }}</b></span>
+    <span class="stat">Faltando <b style="color:#ff9d5c">{{ stats.missing }}</b></span>
+    <span class="stat">Enviados <b style="color:#7aa2ff">{{ stats.sent }}</b></span>
+    <form method="post" action="{{ url_for('sync', integration=integration, only=only if only!='all' else None) }}" style="margin-left:auto">
+      <button class="ghost" type="submit">↻ Sincronizar com a Shopify</button>
+    </form>
+  </div>
+
+  <div class="bar filters">
+    <a class="{{ 'active' if only=='all' }}" href="{{ url_for('index', integration=integration) }}">Todos</a>
+    <a class="{{ 'active' if only=='missing' }}" href="{{ url_for('index', integration=integration, only='missing') }}">Não cadastrados</a>
+    <a class="{{ 'active' if only=='present' }}" href="{{ url_for('index', integration=integration, only='present') }}">Cadastrados</a>
+  </div>
+
+  <form method="post" action="{{ url_for('send') }}">
+    <input type="hidden" name="integration" value="{{ integration }}">
+    <div class="bar">
+      <button type="submit" {{ 'disabled' if not has_creds }}>⬆ Enviar selecionados para a Shopify</button>
+      <span class="muted">marque os “não cadastrados” que deseja criar na loja</span>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th><input type="checkbox" onclick="for(const c of document.querySelectorAll('input.pick:not(:disabled)'))c.checked=this.checked"></th>
+          <th>SKU</th><th>Produto</th><th>Preço</th><th>Status</th><th>Enviado</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in rows %}
+        <tr>
+          <td>
+            <input class="pick" type="checkbox" name="skus" value="{{ r.sku }}"
+                   {{ 'disabled' if r.in_shopify or r.sent }}>
+          </td>
+          <td><code>{{ r.sku }}</code></td>
+          <td>{{ r.product_name or '' }}</td>
+          <td>{{ r.price or '' }}</td>
+          <td>
+            {% if r.in_shopify %}<span class="badge yes">cadastrado</span>
+            {% else %}<span class="badge no">não cadastrado</span>{% endif %}
+          </td>
+          <td>{% if r.sent %}<span class="badge sent">enviado</span>{% endif %}</td>
+        </tr>
+        {% endfor %}
+        {% if not rows %}
+        <tr><td colspan="6" class="muted">Nada aqui. Clique em “Sincronizar com a Shopify”.</td></tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </form>
+</body>
+</html>
