@@ -1,0 +1,40 @@
+// Arquivo gerado automaticamente por src/schema_generator.py
+// Gerado em 2026-06-01T22:34:17
+// Baseado em 1230 registro(s) de productsWorkspaces
+
+generator client {
+  provider             = "prisma-client-py"
+  recursive_type_depth = 5
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Product {
+  id String @id
+  name String
+  isBundle Boolean
+  createdAt DateTime
+  variantsAttributes String?
+  featuredImage String?
+  status String
+  provider_id String
+  price String?
+  analyzis String?
+  productsPrices Json
+  productsVariants Json
+  products_productsCategories Json
+  products_productsTags Json
+  workspace_id Int
+  isApproved Boolean
+  isPrivate Boolean
+  group String?
+  slug String
+  markup String?
+  workspaces Json
+  tier Int?
+
+  @@map("products")
+}

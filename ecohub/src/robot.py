@@ -1,0 +1,394 @@
+"""Robo de captura do EcomHub.
+
+Faz login no portal (https://go.ecomhub.app/login), navega ate a guia
+Produtos e captura a resposta JSON da API que comeca com
+https://api.ecomhub.app/api/productsWorkspaces.
+
+A captura e feita interceptando o trafego de rede do navegador, entao
+pegamos exatamente o mesmo JSON que o portal recebe da API.
+"""
+
+from __future__ import annotations
+
+import asyncio
+import json
+import re
+from datetime import datetime
+from typing import Any
+from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
+
+from playwright.async_api import Page, Response, TimeoutError as PWTimeout, async_playwright
+
+from . import config
+
+
+async def _save_debug(page: Page, label: str) -> None:
+    """Salva screenshot + HTML para ajudar a depurar falhas de login/captura."""
+    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    try:
+        await page.screenshot(path=str(config.DEBUG_DIR / f"{label}_{ts}.png"), full_page=True)
+        html = await page.content()
+        (config.DEBUG_DIR / f"{label}_{ts}.html").write_text(html, encoding="utf-8")
+        print(f"  [debug] capturas salvas em {config.DEBUG_DIR} (prefixo {label}_{ts})")
+    except Exception as exc:  # pragma: no cover - best effort
+        print(f"  [debug] nao foi possivel salvar debug: {exc}")
+
+
+async def _fill_first(page: Page, selectors: list[str], value: str, what: str) -> bool:
+    """Tenta preencher o primeiro seletor que existir na pagina."""
+    for sel in selectors:
+        loc = page.locator(sel).first
+        try:
+            if await loc.count() > 0 and await loc.is_visible():
+                await loc.fill(value)
+                print(f"  [login] {what} preenchido via seletor: {sel}")
+                return True
+        except Exception:
+            continue
+    return False
+
+
+async def _do_login(page: Page) -> None:
+    """Preenche o formulario de login com heuristicas robustas de seletor."""
+    email, password = config.require_credentials()
+    print(f"[1/3] Abrindo pagina de login: {config.LOGIN_URL}")
+    await page.goto(config.LOGIN_URL, wait_until="networkidle")
+
+    # Aguarda o formulario renderizar (SPA)
+    try:
+        await page.wait_for_selector("input", timeout=20000)
+    except PWTimeout:
+        await _save_debug(page, "login_sem_inputs")
+        raise RuntimeError("Nenhum campo de input apareceu na pagina de login.")
+
+    email_ok = await _fill_first(
+        page,
+        [
+            "#input-email",
+            "input[type='email']",
+            "input[name='email']",
+            "input[id='email']",
+            "input[name*='email' i]",
+            "input[placeholder*='mail' i]",
+            "input[type='text']",
+            "input:not([type='password']):not([type='hidden'])",
+        ],
+        email,
+        "E-mail/usuario",
+    )
+    if not email_ok:
+        await _save_debug(page, "login_sem_email")
+        raise RuntimeError("Nao foi possivel localizar o campo de e-mail/usuario.")
+
+    pass_ok = await _fill_first(
+        page,
+        [
+            "#input-password",
+            "input[type='password']",
+            "input[name='password']",
+            "input[id='password']",
+            "input[name*='senha' i]",
+            "input[placeholder*='senha' i]",
+            "input[placeholder*='password' i]",
+        ],
+        password,
+        "Senha",
+    )
+    if not pass_ok:
+        await _save_debug(page, "login_sem_senha")
+        raise RuntimeError("Nao foi possivel localizar o campo de senha.")
+
+    # Escuta a resposta da API de autenticacao para saber o resultado real
+    # do login (200 = ok, 4xx = credenciais/captcha rejeitados).
+    auth_result: dict[str, Any] = {}
+
+    async def on_auth(response: Response) -> None:
+        if re.search(r"/(usersAuth/auth|auth|login|signin)\b", urlparse(response.url).path, re.I):
+            if "auth_result" not in auth_result or response.status >= 400:
+                auth_result["status"] = response.status
+                auth_result["url"] = response.url
+
+    page.on("response", on_auth)
+
+    # Submete o formulario. Preferimos o botao por papel/texto (mais robusto).
+    submitted = False
+    try:
+        btn = page.get_by_role("button", name=re.compile(r"entrar|login|acessar", re.I))
+        if await btn.count() > 0:
+            print("  [login] clicando em 'Entrar' (botao por texto/role)")
+            await btn.first.click()
+            submitted = True
+    except Exception:
+        pass
+
+    if not submitted:
+        for sel in [
+            "button[type='submit']",
+            "input[type='submit']",
+            "button",
+        ]:
+            loc = page.locator(sel).first
+            try:
+                if await loc.count() > 0 and await loc.is_visible():
+                    print(f"  [login] clicando em submit via seletor: {sel}")
+                    await loc.click()
+                    submitted = True
+                    break
+            except Exception:
+                continue
+
+    if not submitted:
+        await page.keyboard.press("Enter")  # ultimo recurso
+
+    # Sucesso = sair do path /login. ATENCAO: a URL de destino contem
+    # "origin=login" na query, entao verificamos apenas o PATH, nunca a URL inteira.
+    def left_login() -> bool:
+        return "login" not in urlparse(page.url).path.lower()
+
+    deadline = 30.0
+    waited = 0.0
+    while waited < deadline:
+        await page.wait_for_timeout(500)
+        waited += 0.5
+        # Credenciais/captcha rejeitados pela API
+        if auth_result.get("status", 0) >= 400:
+            await _save_debug(page, "login_rejeitado")
+            raise RuntimeError(
+                f"Login rejeitado pela API (HTTP {auth_result['status']}). "
+                f"Verifique ECOMHUB_EMAIL/ECOMHUB_PASSWORD no .env. "
+                f"Veja tambem ./debug."
+            )
+        if left_login():
+            break
+
+    page.remove_listener("response", on_auth)
+
+    if not left_login():
+        await _save_debug(page, "login_falhou")
+        raise RuntimeError(
+            "Login nao concluiu (ainda no /login apos 30s). "
+            "Pode ser captcha/credenciais. Veja os arquivos em ./debug."
+        )
+
+    print(f"  [login] login realizado com sucesso. URL atual: {page.url}")
+
+
+def _set_offset(url: str, offset: int) -> str:
+    """Devolve a mesma URL com o parametro de query `offset` alterado."""
+    parts = urlparse(url)
+    query = dict(parse_qsl(parts.query, keep_blank_values=True))
+    query["offset"] = str(offset)
+    return urlunparse(parts._replace(query=urlencode(query)))
+
+
+def _record_id(rec: dict[str, Any]) -> Any:
+    """Chave usada para deduplicar registros entre paginas."""
+    if "id" in rec:
+        return ("id", rec["id"])
+    return ("hash", json.dumps(rec, sort_keys=True, ensure_ascii=False))
+
+
+def _auth_headers(headers: dict[str, str]) -> dict[str, str]:
+    """Filtra os headers da requisicao original, mantendo os de autenticacao."""
+    keep = {"authorization", "accept", "referer", "cookie", "user-agent"}
+    out: dict[str, str] = {}
+    for name, value in headers.items():
+        low = name.lower()
+        if low in keep or low.startswith("x-"):
+            out[name] = value
+    return out
+
+
+# Limite de seguranca para nunca entrar em loop infinito de paginacao.
+MAX_PAGES = 1000
+
+
+async def capture() -> dict[str, Any]:
+    """Executa o fluxo completo, pagina via `offset` e retorna todos os registros."""
+    captured: dict[str, Any] = {}
+    capture_event = asyncio.Event()
+
+    async with async_playwright() as p:
+        browser = await p.chromium.launch(headless=config.HEADLESS)
+        context = await browser.new_context()
+        page = await context.new_page()
+
+        async def on_response(response: Response) -> None:
+            if response.url.startswith(config.API_PREFIX) and response.request.method == "GET":
+                if "body" in captured:
+                    return  # ja temos a primeira pagina (base da paginacao)
+                try:
+                    body = await response.json()
+                except Exception:
+                    return
+                captured["url"] = response.url
+                captured["status"] = response.status
+                captured["body"] = body
+                captured["headers"] = _auth_headers(await response.request.all_headers())
+                print(
+                    f"  [captura] 1a pagina capturada ({response.status}) - "
+                    f"{_record_count(body)} registro(s)"
+                )
+                capture_event.set()
+
+        page.on("response", on_response)
+
+        try:
+            await _do_login(page)
+
+            print(f"[2/3] Navegando ate a guia Produtos: {config.PRODUCTS_URL}")
+            # Tenta clicar num link/menu "Produtos"; se nao houver, navega direto.
+            clicked = False
+            for sel in [
+                "a:has-text('Produtos')",
+                "nav >> text=Produtos",
+                "[href*='products']",
+                "text=Produtos",
+            ]:
+                loc = page.locator(sel).first
+                try:
+                    if await loc.count() > 0 and await loc.is_visible():
+                        await loc.click()
+                        clicked = True
+                        print(f"  [nav] clicou em Produtos via: {sel}")
+                        break
+                except Exception:
+                    continue
+            if not clicked:
+                await page.goto(config.PRODUCTS_URL, wait_until="networkidle")
+
+            print("[3/3] Aguardando a chamada da API productsWorkspaces...")
+            try:
+                await asyncio.wait_for(capture_event.wait(), timeout=30)
+            except asyncio.TimeoutError:
+                pass
+            await page.wait_for_timeout(2000)
+
+            if "body" not in captured:
+                await _save_debug(page, "sem_captura")
+                raise RuntimeError(
+                    "Nao foi capturada nenhuma resposta de "
+                    f"{config.API_PREFIX}. Veja ./debug para investigar."
+                )
+
+            # ---- Paginacao: percorre offset=1,2,3... ate acabar ou dar erro ----
+            base_url = captured["url"]
+            headers = captured["headers"]
+
+            all_records: list[dict[str, Any]] = []
+            seen: set[Any] = set()
+
+            def add_records(recs: list[dict[str, Any]]) -> int:
+                novos = 0
+                for r in recs:
+                    key = _record_id(r)
+                    if key not in seen:
+                        seen.add(key)
+                        all_records.append(r)
+                        novos += 1
+                return novos
+
+            # pagina 0 (a que o portal ja carregou)
+            page0 = extract_records(captured["body"])
+            add_records(page0)
+            print(f"  [paginacao] offset=0 -> {len(page0)} registro(s)")
+
+            offset = 1
+            while offset < MAX_PAGES:
+                url = _set_offset(base_url, offset)
+                try:
+                    resp = await context.request.get(url, headers=headers, timeout=30000)
+                except Exception as exc:
+                    print(f"  [paginacao] offset={offset} falhou ({exc}); parando.")
+                    break
+
+                if resp.status >= 400:
+                    print(f"  [paginacao] offset={offset} -> HTTP {resp.status}; fim.")
+                    break
+
+                try:
+                    body = await resp.json()
+                except Exception:
+                    print(f"  [paginacao] offset={offset} -> resposta nao-JSON; fim.")
+                    break
+
+                recs = extract_records(body)
+                if not recs:
+                    print(f"  [paginacao] offset={offset} -> 0 registro(s); fim.")
+                    break
+
+                novos = add_records(recs)
+                print(
+                    f"  [paginacao] offset={offset} -> {len(recs)} registro(s) "
+                    f"({novos} novo(s), total={len(all_records)})"
+                )
+                if novos == 0:
+                    print("  [paginacao] nenhum registro novo; fim.")
+                    break
+
+                offset += 1
+                await page.wait_for_timeout(200)  # pausa educada entre requisicoes
+            else:
+                print(f"  [paginacao] limite de seguranca de {MAX_PAGES} paginas atingido.")
+
+            captured["records"] = all_records
+            captured["pages"] = offset
+        finally:
+            await context.close()
+            await browser.close()
+
+    return captured
+
+
+def _record_count(body: Any) -> int:
+    """Conta quantos registros existem numa resposta (lista ou objeto paginado)."""
+    records = extract_records(body)
+    return len(records)
+
+
+def extract_records(body: Any) -> list[dict[str, Any]]:
+    """Extrai a lista de produtos de uma resposta que pode vir em varios formatos."""
+    if body is None:
+        return []
+    if isinstance(body, list):
+        return [r for r in body if isinstance(r, dict)]
+    if isinstance(body, dict):
+        for key in ("data", "items", "results", "products", "rows", "content", "records"):
+            value = body.get(key)
+            if isinstance(value, list):
+                return [r for r in value if isinstance(r, dict)]
+            # Estruturas aninhadas tipo {"data": {"items": [...]}}
+            if isinstance(value, dict):
+                nested = extract_records(value)
+                if nested:
+                    return nested
+        # Se o proprio dict parece um unico registro
+        if any(not isinstance(v, (dict, list)) for v in body.values()):
+            return [body]
+    return []
+
+
+def run_capture() -> None:
+    """Ponto de entrada: captura (paginando) e salva o JSON em disco."""
+    result = asyncio.run(capture())
+
+    # Salva a resposta bruta da 1a pagina (referencia do formato original)
+    config.RAW_RESPONSE_JSON.write_text(
+        json.dumps(result["body"], ensure_ascii=False, indent=2), encoding="utf-8"
+    )
+
+    # Salva todos os registros de todas as paginas (deduplicados)
+    records = result.get("records", extract_records(result["body"]))
+    config.PRODUCTS_JSON.write_text(
+        json.dumps(records, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
+
+    print(
+        f"\nOK! {len(records)} produto(s) capturado(s) em {result.get('pages', 1)} pagina(s).\n"
+        f"  - Resposta bruta (1a pagina): {config.RAW_RESPONSE_JSON}\n"
+        f"  - Registros (todas paginas):  {config.PRODUCTS_JSON}"
+    )
+
+
+if __name__ == "__main__":
+    run_capture()
