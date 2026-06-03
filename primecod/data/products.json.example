@@ -1,0 +1,63 @@
+[
+  {
+    "id": 1129,
+    "seller_id": null,
+    "name": "✨ EMS Facial Massager with 7 LED Colors – Lift, Tone & Rejuvenate at Home",
+    "description": "✨ EMS Facial Massager with 7 LED Colors...",
+    "image": null,
+    "sku": "PMLD-322",
+    "quantity": 500,
+    "weight": 1,
+    "url": "https://www.amazon.fr/...",
+    "cost": "8.70",
+    "price": "43.70",
+    "badge": null,
+    "category_id": 4,
+    "created_at": null,
+    "updated_at": null,
+    "creatives_url": null,
+    "status": "published",
+    "shipping_service_id": 11,
+    "big_arena_product_id": null,
+    "big_arena_variant_id": null,
+    "deleted_at": null,
+    "deleted_by": null,
+    "sourcing_price": "8.70",
+    "total_profit": "0.00",
+    "total_units_sold": 0,
+    "total_orders": 0,
+    "is_mystery_box": 0,
+    "has_packaging": 0,
+    "dropea_product_id": null,
+    "auto_upsell_enabled": 0,
+    "stock": "High",
+    "countryIds": [12, 13],
+    "category_name": "Health & Beauty, Hair",
+    "shipping_service_2": null,
+    "shipping_service_3": null,
+    "shipping_service_4": null,
+    "stock_label": "High",
+    "country_ids": [12, 13],
+    "countries": [
+      {
+        "id": 12,
+        "name": "spain",
+        "code": "es",
+        "currency": "eur"
+      },
+      {
+        "id": 13,
+        "name": "portugal",
+        "code": "pt",
+        "currency": "eur"
+      }
+    ],
+    "images": [
+      {
+        "id": 2857,
+        "catalog_product_id": 1129,
+        "path": "https://api.primecod.app/storage/product-1129-1780412444-0.jpeg"
+      }
+    ]
+  }
+]

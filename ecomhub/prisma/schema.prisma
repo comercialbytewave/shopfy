@@ -1,5 +1,5 @@
 // Arquivo gerado automaticamente por src/schema_generator.py
-// Gerado em 2026-06-01T22:34:17
+// Gerado em 2026-06-03T10:20:37
 // Baseado em 1230 registro(s) de productsWorkspaces
 
 generator client {
@@ -20,6 +20,11 @@ model Product {
   variantsAttributes String?
   featuredImage String?
   status String
+  isPrivate Boolean
+  workspace_id Int
+  tier Int?
+  markup String?
+  quantityModifier Int
   provider_id String
   price String?
   analyzis String?
@@ -27,14 +32,6 @@ model Product {
   productsVariants Json
   products_productsCategories Json
   products_productsTags Json
-  workspace_id Int
-  isApproved Boolean
-  isPrivate Boolean
-  group String?
-  slug String
-  markup String?
-  workspaces Json
-  tier Int?
 
   @@map("products")
 }

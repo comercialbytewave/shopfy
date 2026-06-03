@@ -1,0 +1,56 @@
+// Arquivo gerado automaticamente por src/schema_generator.py
+// Baseado em 501 registro(s) de produtos
+
+generator client {
+  provider             = "prisma-client-py"
+  recursive_type_depth = 5
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Product {
+  auto_upsell_enabled Int
+  badge String?
+  big_arena_product_id String?
+  big_arena_variant_id String?
+  category_id Int
+  category_name String
+  cost String
+  countries Json
+  country_ids Json
+  created_at String?
+  creatives_url String?
+  deleted_at String?
+  deleted_by String?
+  description String
+  dropea_product_id Int?
+  has_packaging Int
+  id Int @id
+  image String?
+  images Json
+  is_mystery_box Int
+  name String
+  price String
+  quantity Int
+  seller_id Int?
+  shipping_service_2 String?
+  shipping_service_3 String?
+  shipping_service_4 String?
+  shipping_service_id Int
+  sku String
+  sourcing_price String
+  status String
+  stock String
+  stock_label String
+  total_orders Int
+  total_profit String
+  total_units_sold Int
+  updated_at String?
+  url String
+  weight Int
+
+  @@map("products")
+}

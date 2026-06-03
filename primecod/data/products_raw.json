@@ -1,0 +1,1097 @@
+{
+  "current_page": 42,
+  "data": [
+    {
+      "id": 50,
+      "seller_id": null,
+      "name": "AFIZTM Tourmaline Slimming Sock",
+      "description": "From the perspectives of ancient East, there are various acupoints on the soles of the human body, which correspond to different organs of the human body. Frequent massage of these acupoints can relieve the pressure of human organs, help the organs to discharge accumulated toxins, and promote blood and lymph circulation.\n\nPLEASE EXCLUDE THE FOLLOWING REGIONS AS THEY WILL NOT BE PROCESSED:\nCeuta, Spain\nMelilla, Spain\nCanary Islands, Spain",
+      "image": "https://api.primecod.app/storage/product-50-1723634767.png",
+      "sku": "nil",
+      "quantity": 1551,
+      "weight": 1,
+      "url": "https://promospotshop.shop/products/span-afiz-tourmaline-lymphvity-slimming-health-sock-span",
+      "cost": "2.70",
+      "price": "28.00",
+      "badge": null,
+      "category_id": 4,
+      "created_at": null,
+      "updated_at": null,
+      "creatives_url": "https://drive.google.com/drive/folders/1c_RU6pdANPBXyopWd8s1bpXCH3iyPSWZ",
+      "status": "published",
+      "shipping_service_id": 2,
+      "big_arena_product_id": null,
+      "big_arena_variant_id": null,
+      "deleted_at": null,
+      "deleted_by": null,
+      "sourcing_price": "0.70",
+      "total_profit": "0.00",
+      "total_units_sold": 0,
+      "total_orders": 0,
+      "is_mystery_box": 0,
+      "has_packaging": 0,
+      "dropea_product_id": null,
+      "auto_upsell_enabled": 0,
+      "stock": "High",
+      "countryIds": [
+        12,
+        13
+      ],
+      "category_name": "Health & Beauty, Hair",
+      "shipping_service_2": "3515",
+      "shipping_service_3": null,
+      "shipping_service_4": null,
+      "stock_label": "High",
+      "country_ids": [
+        12,
+        13
+      ],
+      "countries": [
+        {
+          "id": 12,
+          "name": "spain",
+          "code": "es",
+          "currency": "eur",
+          "currency_rate": "1.0000",
+          "logistics_country_id": "ec19345d-133d-ea11-a601-0003ff1aa775",
+          "biz_courier_crm": "100004741",
+          "shipping_fees": "7.99",
+          "big_arena_warehouse_api_token": null,
+          "return_fees": "1.00",
+          "delivered_fee": "7.99",
+          "returned_fee": "6.99",
+          "phone_code": null,
+          "cod_enabled": 1,
+          "prepaid_enabled": 0,
+          "fulfillment_fees": 0.75,
+          "cc_fee_lead_confirmed": "1.00",
+          "cc_fee_order_delivered": "1.50",
+          "cod_fee_rate": "0.0500",
+          "pivot": {
+            "catalog_product_id": 50,
+            "country_id": 12
+          }
+        },
+        {
+          "id": 13,
+          "name": "portugal",
+          "code": "pt",
+          "currency": "eur",
+          "currency_rate": "1.0000",
+          "logistics_country_id": "8f19345d-133d-ea11-a601-0003ff1aa775",
+          "biz_courier_crm": "100004777",
+          "shipping_fees": "7.99",
+          "big_arena_warehouse_api_token": null,
+          "return_fees": "1.00",
+          "delivered_fee": "7.99",
+          "returned_fee": "6.99",
+          "phone_code": null,
+          "cod_enabled": 1,
+          "prepaid_enabled": 0,
+          "fulfillment_fees": 0.75,
+          "cc_fee_lead_confirmed": "1.00",
+          "cc_fee_order_delivered": "1.50",
+          "cod_fee_rate": "0.0500",
+          "pivot": {
+            "catalog_product_id": 50,
+            "country_id": 13
+          }
+        }
+      ],
+      "images": [
+        {
+          "id": 78,
+          "catalog_product_id": 50,
+          "path": "https://api.primecod.app/storage/product-50-1723634767.png"
+        }
+      ]
+    },
+    {
+      "id": 49,
+      "seller_id": null,
+      "name": "fly Lymphatic Magnitherapy Germanium earrings",
+      "description": "Magnetic Therapy realigns the electromagnetic charge  in the body cells to promote self-healing, which is  good for the lymphatic system . The magnetic field heals by alkalizing the tissue and releasing oxygen from its bound state back to its molecular state. It also remarkably diminishes swelling  on lymph nodes and reduce 60% excess lymph fluid in consistent.\n\nPLEASE EXCLUDE THE FOLLOWING REGIONS AS THEY WILL NOT BE PROCESSED:\nCeuta, Spain\nMelilla, Spain\nCanary Islands, Spain",
+      "image": "https://api.primecod.app/storage/product-49-1721922701.webp",
+      "sku": "BP003887",
+      "quantity": 2629,
+      "weight": 1,
+      "url": "https://flysmus.com/products/lymphvity-magnetherapy-germanium-earrings",
+      "cost": "3.00",
+      "price": "25.00",
+      "badge": null,
+      "category_id": 4,
+      "created_at": null,
+      "updated_at": null,
+      "creatives_url": "https://drive.google.com/drive/folders/18mvqSJoVpHfPDah_vLUhvXI8qfhXO6Lt",
+      "status": "published",
+      "shipping_service_id": 10,
+      "big_arena_product_id": null,
+      "big_arena_variant_id": null,
+      "deleted_at": null,
+      "deleted_by": null,
+      "sourcing_price": "0.95",
+      "total_profit": "6.75",
+      "total_units_sold": 3,
+      "total_orders": 3,
+      "is_mystery_box": 0,
+      "has_packaging": 0,
+      "dropea_product_id": null,
+      "auto_upsell_enabled": 0,
+      "stock": "High",
+      "countryIds": [
+        12,
+        13
+      ],
+      "category_name": "Health & Beauty, Hair",
+      "shipping_service_2": "3887",
+      "shipping_service_3": null,
+      "shipping_service_4": null,
+      "stock_label": "High",
+      "country_ids": [
+        12,
+        13
+      ],
+      "countries": [
+        {
+          "id": 12,
+          "name": "spain",
+          "code": "es",
+          "currency": "eur",
+          "currency_rate": "1.0000",
+          "logistics_country_id": "ec19345d-133d-ea11-a601-0003ff1aa775",
+          "biz_courier_crm": "100004741",
+          "shipping_fees": "7.99",
+          "big_arena_warehouse_api_token": null,
+          "return_fees": "1.00",
+          "delivered_fee": "7.99",
+          "returned_fee": "6.99",
+          "phone_code": null,
+          "cod_enabled": 1,
+          "prepaid_enabled": 0,
+          "fulfillment_fees": 0.75,
+          "cc_fee_lead_confirmed": "1.00",
+          "cc_fee_order_delivered": "1.50",
+          "cod_fee_rate": "0.0500",
+          "pivot": {
+            "catalog_product_id": 49,
+            "country_id": 12
+          }
+        },
+        {
+          "id": 13,
+          "name": "portugal",
+          "code": "pt",
+          "currency": "eur",
+          "currency_rate": "1.0000",
+          "logistics_country_id": "8f19345d-133d-ea11-a601-0003ff1aa775",
+          "biz_courier_crm": "100004777",
+          "shipping_fees": "7.99",
+          "big_arena_warehouse_api_token": null,
+          "return_fees": "1.00",
+          "delivered_fee": "7.99",
+          "returned_fee": "6.99",
+          "phone_code": null,
+          "cod_enabled": 1,
+          "prepaid_enabled": 0,
+          "fulfillment_fees": 0.75,
+          "cc_fee_lead_confirmed": "1.00",
+          "cc_fee_order_delivered": "1.50",
+          "cod_fee_rate": "0.0500",
+          "pivot": {
+            "catalog_product_id": 49,
+            "country_id": 13
+          }
+        }
+      ],
+      "images": [
+        {
+          "id": 77,
+          "catalog_product_id": 49,
+          "path": "https://api.primecod.app/storage/product-49-1721922701.webp"
+        }
+      ]
+    },
+    {
+      "id": 48,
+      "seller_id": null,
+      "name": "Flysmus™ Halolux Lymphatic Germanium Earrings",
+      "description": "Introducing the Flysmus™ Halolux Lymphatic Germanium Earrings, a remarkable innovation for healthy, natural weight loss and improved blood circulation. These earrings not only adorn your ears with elegance but also harness the power of germanium, a unique mineral renowned for its potential health benefits.",
+      "image": "https://api.primecod.app/storage/product-48-1721922409.webp",
+      "sku": "BP003886",
+      "quantity": 2551,
+      "weight": 1,
+      "url": "https://flysmus.com/products/halolux-lymphvity-germanium-earrings",
+      "cost": "1.95",
+      "price": "29.00",
+      "badge": null,
+      "category_id": 4,
+      "created_at": null,
+      "updated_at": null,
+      "creatives_url": "https://drive.google.com/drive/folders/1kgIRc-reYlCIj6VBijda90au9uWoy3zH",
+      "status": "published",
+      "shipping_service_id": 10,
+      "big_arena_product_id": null,
+      "big_arena_variant_id": null,
+      "deleted_at": null,
+      "deleted_by": null,
+      "sourcing_price": "0.95",
+      "total_profit": "52.78",
+      "total_units_sold": 44,
+      "total_orders": 41,
+      "is_mystery_box": 0,
+      "has_packaging": 0,
+      "dropea_product_id": null,
+      "auto_upsell_enabled": 0,
+      "stock": "High",
+      "countryIds": [
+        12,
+        13
+      ],
+      "category_name": "Health & Beauty, Hair",
+      "shipping_service_2": "3886",
+      "shipping_service_3": null,
+      "shipping_service_4": null,
+      "stock_label": "High",
+      "country_ids": [
+        12,
+        13
+      ],
+      "countries": [
+        {
+          "id": 12,
+          "name": "spain",
+          "code": "es",
+          "currency": "eur",
+          "currency_rate": "1.0000",
+          "logistics_country_id": "ec19345d-133d-ea11-a601-0003ff1aa775",
+          "biz_courier_crm": "100004741",
+          "shipping_fees": "7.99",
+          "big_arena_warehouse_api_token": null,
+          "return_fees": "1.00",
+          "delivered_fee": "7.99",
+          "returned_fee": "6.99",
+          "phone_code": null,
+          "cod_enabled": 1,
+          "prepaid_enabled": 0,
+          "fulfillment_fees": 0.75,
+          "cc_fee_lead_confirmed": "1.00",
+          "cc_fee_order_delivered": "1.50",
+          "cod_fee_rate": "0.0500",
+          "pivot": {
+            "catalog_product_id": 48,
+            "country_id": 12
+          }
+        },
+        {
+          "id": 13,
+          "name": "portugal",
+          "code": "pt",
+          "currency": "eur",
+          "currency_rate": "1.0000",
+          "logistics_country_id": "8f19345d-133d-ea11-a601-0003ff1aa775",
+          "biz_courier_crm": "100004777",
+          "shipping_fees": "7.99",
+          "big_arena_warehouse_api_token": null,
+          "return_fees": "1.00",
+          "delivered_fee": "7.99",
+          "returned_fee": "6.99",
+          "phone_code": null,
+          "cod_enabled": 1,
+          "prepaid_enabled": 0,
+          "fulfillment_fees": 0.75,
+          "cc_fee_lead_confirmed": "1.00",
+          "cc_fee_order_delivered": "1.50",
+          "cod_fee_rate": "0.0500",
+          "pivot": {
+            "catalog_product_id": 48,
+            "country_id": 13
+          }
+        }
+      ],
+      "images": [
+        {
+          "id": 76,
+          "catalog_product_id": 48,
+          "path": "https://api.primecod.app/storage/product-48-1721922409.webp"
+        }
+      ]
+    },
+    {
+      "id": 47,
+      "seller_id": null,
+      "name": "GFOUK NOAVA Rotating IONIC Detox Ring",
+      "description": "Introducing the revolutionary GFOUK™ NOAVA TwistyIONIC Detoxing Ring , a remarkable medical device that harnesses cutting-edge technology to unlock new possibilities. This innovative ring is magnetized at precise intervals with an Alternating North-South Polarity Orientation, ensuring maximum effectiveness. \n\nPLEASE EXCLUDE THE FOLLOWING REGIONS AS THEY WILL NOT BE PROCESSED:\nCeuta, Spain\nMelilla, Spain\nCanary Islands, Spain",
+      "image": "https://api.primecod.app/storage/product-47-1721922028.webp",
+      "sku": "BP003679",
+      "quantity": 379,
+      "weight": 1,
+      "url": "https://gfouk.com/products/noava-twistyionic-detoxing-ring",
+      "cost": "1.80",
+      "price": "29.00",
+      "badge": null,
+      "category_id": 4,
+      "created_at": null,
+      "updated_at": null,
+      "creatives_url": "https://drive.google.com/drive/folders/1qUTPpuwjmxIRMO_-2pjKYIe13ntkeMZO",
+      "status": "published",
+      "shipping_service_id": 2,
+      "big_arena_product_id": null,
+      "big_arena_variant_id": null,
+      "deleted_at": null,
+      "deleted_by": null,
+      "sourcing_price": "0.80",
+      "total_profit": "0.00",
+      "total_units_sold": 0,
+      "total_orders": 0,
+      "is_mystery_box": 0,
+      "has_packaging": 0,
+      "dropea_product_id": null,
+      "auto_upsell_enabled": 0,
+      "stock": "High",
+      "countryIds": [
+        12,
+        13
+      ],
+      "category_name": "Health & Beauty, Hair",
+      "shipping_service_2": "3722",
+      "shipping_service_3": null,
+      "shipping_service_4": null,
+      "stock_label": "High",
+      "country_ids": [
+        12,
+        13
+      ],
+      "countries": [
+        {
+          "id": 12,
+          "name": "spain",
+          "code": "es",
+          "currency": "eur",
+          "currency_rate": "1.0000",
+          "logistics_country_id": "ec19345d-133d-ea11-a601-0003ff1aa775",
+          "biz_courier_crm": "100004741",
+          "shipping_fees": "7.99",
+          "big_arena_warehouse_api_token": null,
+          "return_fees": "1.00",
+          "delivered_fee": "7.99",
+          "returned_fee": "6.99",
+          "phone_code": null,
+          "cod_enabled": 1,
+          "prepaid_enabled": 0,
+          "fulfillment_fees": 0.75,
+          "cc_fee_lead_confirmed": "1.00",
+          "cc_fee_order_delivered": "1.50",
+          "cod_fee_rate": "0.0500",
+          "pivot": {
+            "catalog_product_id": 47,
+            "country_id": 12
+          }
+        },
+        {
+          "id": 13,
+          "name": "portugal",
+          "code": "pt",
+          "currency": "eur",
+          "currency_rate": "1.0000",
+          "logistics_country_id": "8f19345d-133d-ea11-a601-0003ff1aa775",
+          "biz_courier_crm": "100004777",
+          "shipping_fees": "7.99",
+          "big_arena_warehouse_api_token": null,
+          "return_fees": "1.00",
+          "delivered_fee": "7.99",
+          "returned_fee": "6.99",
+          "phone_code": null,
+          "cod_enabled": 1,
+          "prepaid_enabled": 0,
+          "fulfillment_fees": 0.75,
+          "cc_fee_lead_confirmed": "1.00",
+          "cc_fee_order_delivered": "1.50",
+          "cod_fee_rate": "0.0500",
+          "pivot": {
+            "catalog_product_id": 47,
+            "country_id": 13
+          }
+        }
+      ],
+      "images": [
+        {
+          "id": 75,
+          "catalog_product_id": 47,
+          "path": "https://api.primecod.app/storage/product-47-1721922028.webp"
+        }
+      ]
+    },
+    {
+      "id": 46,
+      "seller_id": null,
+      "name": "GFOUK Blue titanium carbon bracelet",
+      "description": "The lymphatic system is a great part of our immune system and so that we have a health body that functions properly.\n\nPLEASE EXCLUDE THE FOLLOWING REGIONS AS THEY WILL NOT BE PROCESSED:\nCeuta, Spain\nMelilla, Spain\nCanary Islands, Spain",
+      "image": "https://api.primecod.app/storage/product-46-1721916944.webp",
+      "sku": "BP003678",
+      "quantity": 1578,
+      "weight": 1,
+      "url": "https://gfouk.com/products/gfouk%E2%84%A2-blue-carbon-titanbracelet",
+      "cost": "3.00",
+      "price": "29.00",
+      "badge": null,
+      "category_id": 4,
+      "created_at": null,
+      "updated_at": null,
+      "creatives_url": "https://drive.google.com/drive/u/2/folders/1xNMZ38JCr1YGQQkGq5DfEtm3HLa5ZXWl",
+      "status": "published",
+      "shipping_service_id": 10,
+      "big_arena_product_id": null,
+      "big_arena_variant_id": null,
+      "deleted_at": null,
+      "deleted_by": null,
+      "sourcing_price": "1.90",
+      "total_profit": "0.00",
+      "total_units_sold": 0,
+      "total_orders": 0,
+      "is_mystery_box": 0,
+      "has_packaging": 0,
+      "dropea_product_id": null,
+      "auto_upsell_enabled": 0,
+      "stock": "High",
+      "countryIds": [
+        12,
+        13
+      ],
+      "category_name": "Health & Beauty, Hair",
+      "shipping_service_2": "3678",
+      "shipping_service_3": null,
+      "shipping_service_4": null,
+      "stock_label": "High",
+      "country_ids": [
+        12,
+        13
+      ],
+      "countries": [
+        {
+          "id": 12,
+          "name": "spain",
+          "code": "es",
+          "currency": "eur",
+          "currency_rate": "1.0000",
+          "logistics_country_id": "ec19345d-133d-ea11-a601-0003ff1aa775",
+          "biz_courier_crm": "100004741",
+          "shipping_fees": "7.99",
+          "big_arena_warehouse_api_token": null,
+          "return_fees": "1.00",
+          "delivered_fee": "7.99",
+          "returned_fee": "6.99",
+          "phone_code": null,
+          "cod_enabled": 1,
+          "prepaid_enabled": 0,
+          "fulfillment_fees": 0.75,
+          "cc_fee_lead_confirmed": "1.00",
+          "cc_fee_order_delivered": "1.50",
+          "cod_fee_rate": "0.0500",
+          "pivot": {
+            "catalog_product_id": 46,
+            "country_id": 12
+          }
+        },
+        {
+          "id": 13,
+          "name": "portugal",
+          "code": "pt",
+          "currency": "eur",
+          "currency_rate": "1.0000",
+          "logistics_country_id": "8f19345d-133d-ea11-a601-0003ff1aa775",
+          "biz_courier_crm": "100004777",
+          "shipping_fees": "7.99",
+          "big_arena_warehouse_api_token": null,
+          "return_fees": "1.00",
+          "delivered_fee": "7.99",
+          "returned_fee": "6.99",
+          "phone_code": null,
+          "cod_enabled": 1,
+          "prepaid_enabled": 0,
+          "fulfillment_fees": 0.75,
+          "cc_fee_lead_confirmed": "1.00",
+          "cc_fee_order_delivered": "1.50",
+          "cod_fee_rate": "0.0500",
+          "pivot": {
+            "catalog_product_id": 46,
+            "country_id": 13
+          }
+        }
+      ],
+      "images": [
+        {
+          "id": 67,
+          "catalog_product_id": 46,
+          "path": "https://api.primecod.app/storage/product-46-1721916944.webp"
+        },
+        {
+          "id": 68,
+          "catalog_product_id": 46,
+          "path": "https://api.primecod.app/storage/product-46-1729689211-0.webp"
+        },
+        {
+          "id": 69,
+          "catalog_product_id": 46,
+          "path": "https://api.primecod.app/storage/product-46-1729689211-1.webp"
+        },
+        {
+          "id": 70,
+          "catalog_product_id": 46,
+          "path": "https://api.primecod.app/storage/product-46-1729689211-2.webp"
+        },
+        {
+          "id": 71,
+          "catalog_product_id": 46,
+          "path": "https://api.primecod.app/storage/product-46-1729689211-3.webp"
+        },
+        {
+          "id": 72,
+          "catalog_product_id": 46,
+          "path": "https://api.primecod.app/storage/product-46-1729689211-4.webp"
+        },
+        {
+          "id": 73,
+          "catalog_product_id": 46,
+          "path": "https://api.primecod.app/storage/product-46-1729689211-5.webp"
+        },
+        {
+          "id": 74,
+          "catalog_product_id": 46,
+          "path": "https://api.primecod.app/storage/product-46-1729689211-6.webp"
+        }
+      ]
+    },
+    {
+      "id": 45,
+      "seller_id": null,
+      "name": "ShougaGRO hair growth spray",
+      "description": "Ginger extract is known for achieving strength by providing elasticity and moisturizing hair follicles and works as an antioxidant. It also protects from breakage and split ends while working as a moisturizer to smooth out any roughness. A potent ingredient in hair care products, it is extremely rich in compounds and nutrients such as vitamins, magnesium, potassium and fatty acids that are essential for the prevention of hair loss.\n\nPLEASE EXCLUDE THE FOLLOWING REGIONS AS THEY WILL NOT BE PROCESSED:\nCeuta, Spain\nMelilla, Spain\nCanary Islands, Spain",
+      "image": "https://api.primecod.app/storage/product-45-1721916556.webp",
+      "sku": "BP003672",
+      "quantity": 339,
+      "weight": 1,
+      "url": "https://flowerence.com/products/shougagro-japanese-hair-growth-spray?variant=44310625648923",
+      "cost": "3.25",
+      "price": "29.00",
+      "badge": "top",
+      "category_id": 4,
+      "created_at": null,
+      "updated_at": null,
+      "creatives_url": "https://drive.google.com/drive/folders/1df2XKtdhmQRWFarCZ8iyB0tZEtMUQ2tr",
+      "status": "published",
+      "shipping_service_id": 8,
+      "big_arena_product_id": null,
+      "big_arena_variant_id": null,
+      "deleted_at": null,
+      "deleted_by": null,
+      "sourcing_price": "1.25",
+      "total_profit": "848.44",
+      "total_units_sold": 375,
+      "total_orders": 233,
+      "is_mystery_box": 0,
+      "has_packaging": 0,
+      "dropea_product_id": 15550,
+      "auto_upsell_enabled": 1,
+      "stock": "High",
+      "countryIds": [
+        12,
+        13
+      ],
+      "category_name": "Health & Beauty, Hair",
+      "shipping_service_2": "3672",
+      "shipping_service_3": null,
+      "shipping_service_4": null,
+      "stock_label": "High",
+      "country_ids": [
+        12,
+        13
+      ],
+      "countries": [
+        {
+          "id": 12,
+          "name": "spain",
+          "code": "es",
+          "currency": "eur",
+          "currency_rate": "1.0000",
+          "logistics_country_id": "ec19345d-133d-ea11-a601-0003ff1aa775",
+          "biz_courier_crm": "100004741",
+          "shipping_fees": "7.99",
+          "big_arena_warehouse_api_token": null,
+          "return_fees": "1.00",
+          "delivered_fee": "7.99",
+          "returned_fee": "6.99",
+          "phone_code": null,
+          "cod_enabled": 1,
+          "prepaid_enabled": 0,
+          "fulfillment_fees": 0.75,
+          "cc_fee_lead_confirmed": "1.00",
+          "cc_fee_order_delivered": "1.50",
+          "cod_fee_rate": "0.0500",
+          "pivot": {
+            "catalog_product_id": 45,
+            "country_id": 12
+          }
+        },
+        {
+          "id": 13,
+          "name": "portugal",
+          "code": "pt",
+          "currency": "eur",
+          "currency_rate": "1.0000",
+          "logistics_country_id": "8f19345d-133d-ea11-a601-0003ff1aa775",
+          "biz_courier_crm": "100004777",
+          "shipping_fees": "7.99",
+          "big_arena_warehouse_api_token": null,
+          "return_fees": "1.00",
+          "delivered_fee": "7.99",
+          "returned_fee": "6.99",
+          "phone_code": null,
+          "cod_enabled": 1,
+          "prepaid_enabled": 0,
+          "fulfillment_fees": 0.75,
+          "cc_fee_lead_confirmed": "1.00",
+          "cc_fee_order_delivered": "1.50",
+          "cod_fee_rate": "0.0500",
+          "pivot": {
+            "catalog_product_id": 45,
+            "country_id": 13
+          }
+        }
+      ],
+      "images": [
+        {
+          "id": 61,
+          "catalog_product_id": 45,
+          "path": "https://api.primecod.app/storage/product-45-1721916556.webp"
+        },
+        {
+          "id": 62,
+          "catalog_product_id": 45,
+          "path": "https://api.primecod.app/storage/product-45-1729688872-0.jpg"
+        },
+        {
+          "id": 63,
+          "catalog_product_id": 45,
+          "path": "https://api.primecod.app/storage/product-45-1729688872-1.jpg"
+        },
+        {
+          "id": 64,
+          "catalog_product_id": 45,
+          "path": "https://api.primecod.app/storage/product-45-1729688872-2.jpg"
+        },
+        {
+          "id": 65,
+          "catalog_product_id": 45,
+          "path": "https://api.primecod.app/storage/product-45-1729688872-3.jpg"
+        },
+        {
+          "id": 66,
+          "catalog_product_id": 45,
+          "path": "https://api.primecod.app/storage/product-45-1729688872-4.png"
+        }
+      ]
+    },
+    {
+      "id": 44,
+      "seller_id": null,
+      "name": "24k gold serum",
+      "description": "Let’s take a look at the lovely customers who have benefited from the advantages of 24K GLOD Collagen Booster Serum!\n\nPLEASE EXCLUDE THE FOLLOWING REGIONS AS THEY WILL NOT BE PROCESSED:\nCeuta, Spain\nMelilla, Spain\nCanary Islands, Spain",
+      "image": "https://api.primecod.app/storage/product-44-1721916279.webp",
+      "sku": "BP003581",
+      "quantity": 390,
+      "weight": 1,
+      "url": "https://orabais.store/products/covercoco-luxury-24k-gold-serum-visage-hydratant-et-anti-age-pour-femme",
+      "cost": "2.15",
+      "price": "29.00",
+      "badge": null,
+      "category_id": 4,
+      "created_at": null,
+      "updated_at": null,
+      "creatives_url": "https://drive.google.com/drive/folders/1ktjuX-fcHcMjIDF6p8TXq4972U8RxsqH",
+      "status": "published",
+      "shipping_service_id": 10,
+      "big_arena_product_id": null,
+      "big_arena_variant_id": null,
+      "deleted_at": null,
+      "deleted_by": null,
+      "sourcing_price": "1.15",
+      "total_profit": "64.56",
+      "total_units_sold": 52,
+      "total_orders": 39,
+      "is_mystery_box": 0,
+      "has_packaging": 0,
+      "dropea_product_id": null,
+      "auto_upsell_enabled": 0,
+      "stock": "High",
+      "countryIds": [
+        12,
+        13
+      ],
+      "category_name": "Health & Beauty, Hair",
+      "shipping_service_2": "3581",
+      "shipping_service_3": null,
+      "shipping_service_4": null,
+      "stock_label": "High",
+      "country_ids": [
+        12,
+        13
+      ],
+      "countries": [
+        {
+          "id": 12,
+          "name": "spain",
+          "code": "es",
+          "currency": "eur",
+          "currency_rate": "1.0000",
+          "logistics_country_id": "ec19345d-133d-ea11-a601-0003ff1aa775",
+          "biz_courier_crm": "100004741",
+          "shipping_fees": "7.99",
+          "big_arena_warehouse_api_token": null,
+          "return_fees": "1.00",
+          "delivered_fee": "7.99",
+          "returned_fee": "6.99",
+          "phone_code": null,
+          "cod_enabled": 1,
+          "prepaid_enabled": 0,
+          "fulfillment_fees": 0.75,
+          "cc_fee_lead_confirmed": "1.00",
+          "cc_fee_order_delivered": "1.50",
+          "cod_fee_rate": "0.0500",
+          "pivot": {
+            "catalog_product_id": 44,
+            "country_id": 12
+          }
+        },
+        {
+          "id": 13,
+          "name": "portugal",
+          "code": "pt",
+          "currency": "eur",
+          "currency_rate": "1.0000",
+          "logistics_country_id": "8f19345d-133d-ea11-a601-0003ff1aa775",
+          "biz_courier_crm": "100004777",
+          "shipping_fees": "7.99",
+          "big_arena_warehouse_api_token": null,
+          "return_fees": "1.00",
+          "delivered_fee": "7.99",
+          "returned_fee": "6.99",
+          "phone_code": null,
+          "cod_enabled": 1,
+          "prepaid_enabled": 0,
+          "fulfillment_fees": 0.75,
+          "cc_fee_lead_confirmed": "1.00",
+          "cc_fee_order_delivered": "1.50",
+          "cod_fee_rate": "0.0500",
+          "pivot": {
+            "catalog_product_id": 44,
+            "country_id": 13
+          }
+        }
+      ],
+      "images": [
+        {
+          "id": 60,
+          "catalog_product_id": 44,
+          "path": "https://api.primecod.app/storage/product-44-1721916279.webp"
+        }
+      ]
+    },
+    {
+      "id": 43,
+      "seller_id": null,
+      "name": "Face cleanser",
+      "description": "Wash your skin every day problems are still emerging.\n\nPLEASE EXCLUDE THE FOLLOWING REGIONS AS THEY WILL NOT BE PROCESSED:\nCeuta, Spain\nMelilla, Spain\nCanary Islands, Spain",
+      "image": "https://api.primecod.app/storage/product-43-1721915989.jpg",
+      "sku": "6942492401337",
+      "quantity": 2403,
+      "weight": 1,
+      "url": "https://www.hoaptitoele.com/products/southern-xiehe-niacinamide-whitening-facial-cleanser-5",
+      "cost": "2.75",
+      "price": "29.00",
+      "badge": null,
+      "category_id": 4,
+      "created_at": null,
+      "updated_at": null,
+      "creatives_url": "https://drive.google.com/drive/folders/1NEiGmdUQW-TJkIzhiZw6gT3-nPvfkkhH",
+      "status": "published",
+      "shipping_service_id": 10,
+      "big_arena_product_id": null,
+      "big_arena_variant_id": null,
+      "deleted_at": null,
+      "deleted_by": null,
+      "sourcing_price": "1.75",
+      "total_profit": "45.13",
+      "total_units_sold": 33,
+      "total_orders": 20,
+      "is_mystery_box": 0,
+      "has_packaging": 0,
+      "dropea_product_id": null,
+      "auto_upsell_enabled": 0,
+      "stock": "High",
+      "countryIds": [
+        12,
+        13
+      ],
+      "category_name": "Health & Beauty, Hair",
+      "shipping_service_2": "3543",
+      "shipping_service_3": null,
+      "shipping_service_4": null,
+      "stock_label": "High",
+      "country_ids": [
+        12,
+        13
+      ],
+      "countries": [
+        {
+          "id": 12,
+          "name": "spain",
+          "code": "es",
+          "currency": "eur",
+          "currency_rate": "1.0000",
+          "logistics_country_id": "ec19345d-133d-ea11-a601-0003ff1aa775",
+          "biz_courier_crm": "100004741",
+          "shipping_fees": "7.99",
+          "big_arena_warehouse_api_token": null,
+          "return_fees": "1.00",
+          "delivered_fee": "7.99",
+          "returned_fee": "6.99",
+          "phone_code": null,
+          "cod_enabled": 1,
+          "prepaid_enabled": 0,
+          "fulfillment_fees": 0.75,
+          "cc_fee_lead_confirmed": "1.00",
+          "cc_fee_order_delivered": "1.50",
+          "cod_fee_rate": "0.0500",
+          "pivot": {
+            "catalog_product_id": 43,
+            "country_id": 12
+          }
+        },
+        {
+          "id": 13,
+          "name": "portugal",
+          "code": "pt",
+          "currency": "eur",
+          "currency_rate": "1.0000",
+          "logistics_country_id": "8f19345d-133d-ea11-a601-0003ff1aa775",
+          "biz_courier_crm": "100004777",
+          "shipping_fees": "7.99",
+          "big_arena_warehouse_api_token": null,
+          "return_fees": "1.00",
+          "delivered_fee": "7.99",
+          "returned_fee": "6.99",
+          "phone_code": null,
+          "cod_enabled": 1,
+          "prepaid_enabled": 0,
+          "fulfillment_fees": 0.75,
+          "cc_fee_lead_confirmed": "1.00",
+          "cc_fee_order_delivered": "1.50",
+          "cod_fee_rate": "0.0500",
+          "pivot": {
+            "catalog_product_id": 43,
+            "country_id": 13
+          }
+        }
+      ],
+      "images": [
+        {
+          "id": 59,
+          "catalog_product_id": 43,
+          "path": "https://api.primecod.app/storage/product-43-1721915989.jpg"
+        }
+      ]
+    },
+    {
+      "id": 42,
+      "seller_id": null,
+      "name": "Oveallgo Wormwood Cellulite",
+      "description": "Enjoy smooth, toned skin with Oveallgo™ Wormwood CelluliteBeGone Skin Tighten Cream!\n\nPLEASE EXCLUDE THE FOLLOWING REGIONS AS THEY WILL NOT BE PROCESSED:\nCeuta, Spain\nMelilla, Spain\nCanary Islands, Spain",
+      "image": "https://api.primecod.app/storage/product-42-1721915460.webp",
+      "sku": "BP003496",
+      "quantity": 1823,
+      "weight": 1,
+      "url": "https://fr.aliexpress.com/item/1005006925543118.html?dp=d19c1821b8ae7293faff6f635c646297&af=607243&cv=1068989&afref=&mall_affr=pr3&utm_source=admitad&utm_medium=cpa&utm_campaign=607243&utm_content=1068989&dp=d19c1821b8ae7293faff6f635c646297&af=607243&cv=1068989&afref=&mall_affr=pr3&utm_source=admitad&utm_medium=cpa&utm_campaign=607243&utm_content=1068989&aff_fcid=3fe92907415c4dcfa0c844aa235ff560-1729677288268-09538-_ePNSNV&aff_fsk=_ePNSNV&aff_platform=portals-tool&sk=_ePNSNV&aff_trace_key=3fe92907415c4dcfa0c844aa235ff560-1729677288268-09538-_ePNSNV&terminal_id=aaf9ef44c39b401e8c48d22457597633&afSmartRedirect=y",
+      "cost": "2.00",
+      "price": "29.00",
+      "badge": "top",
+      "category_id": 4,
+      "created_at": null,
+      "updated_at": null,
+      "creatives_url": "https://drive.google.com/drive/folders/1GQQh9kEL57ZPrDYlMVcHxRfnYo7cE7UJ",
+      "status": "published",
+      "shipping_service_id": 10,
+      "big_arena_product_id": null,
+      "big_arena_variant_id": null,
+      "deleted_at": null,
+      "deleted_by": null,
+      "sourcing_price": "0.95",
+      "total_profit": "13.74",
+      "total_units_sold": 11,
+      "total_orders": 11,
+      "is_mystery_box": 0,
+      "has_packaging": 0,
+      "dropea_product_id": null,
+      "auto_upsell_enabled": 0,
+      "stock": "High",
+      "countryIds": [
+        12,
+        13
+      ],
+      "category_name": "Health & Beauty, Hair",
+      "shipping_service_2": "3496",
+      "shipping_service_3": null,
+      "shipping_service_4": null,
+      "stock_label": "High",
+      "country_ids": [
+        12,
+        13
+      ],
+      "countries": [
+        {
+          "id": 12,
+          "name": "spain",
+          "code": "es",
+          "currency": "eur",
+          "currency_rate": "1.0000",
+          "logistics_country_id": "ec19345d-133d-ea11-a601-0003ff1aa775",
+          "biz_courier_crm": "100004741",
+          "shipping_fees": "7.99",
+          "big_arena_warehouse_api_token": null,
+          "return_fees": "1.00",
+          "delivered_fee": "7.99",
+          "returned_fee": "6.99",
+          "phone_code": null,
+          "cod_enabled": 1,
+          "prepaid_enabled": 0,
+          "fulfillment_fees": 0.75,
+          "cc_fee_lead_confirmed": "1.00",
+          "cc_fee_order_delivered": "1.50",
+          "cod_fee_rate": "0.0500",
+          "pivot": {
+            "catalog_product_id": 42,
+            "country_id": 12
+          }
+        },
+        {
+          "id": 13,
+          "name": "portugal",
+          "code": "pt",
+          "currency": "eur",
+          "currency_rate": "1.0000",
+          "logistics_country_id": "8f19345d-133d-ea11-a601-0003ff1aa775",
+          "biz_courier_crm": "100004777",
+          "shipping_fees": "7.99",
+          "big_arena_warehouse_api_token": null,
+          "return_fees": "1.00",
+          "delivered_fee": "7.99",
+          "returned_fee": "6.99",
+          "phone_code": null,
+          "cod_enabled": 1,
+          "prepaid_enabled": 0,
+          "fulfillment_fees": 0.75,
+          "cc_fee_lead_confirmed": "1.00",
+          "cc_fee_order_delivered": "1.50",
+          "cod_fee_rate": "0.0500",
+          "pivot": {
+            "catalog_product_id": 42,
+            "country_id": 13
+          }
+        }
+      ],
+      "images": [
+        {
+          "id": 58,
+          "catalog_product_id": 42,
+          "path": "https://api.primecod.app/storage/product-42-1721915460.webp"
+        }
+      ]
+    }
+  ],
+  "first_page_url": "https://api.primecod.app/api/catalog/products?per_page=12&page=1",
+  "from": 493,
+  "last_page": 42,
+  "last_page_url": "https://api.primecod.app/api/catalog/products?per_page=12&page=42",
+  "links": [
+    {
+      "url": "https://api.primecod.app/api/catalog/products?per_page=12&page=41",
+      "label": "&laquo; Previous",
+      "active": false
+    },
+    {
+      "url": "https://api.primecod.app/api/catalog/products?per_page=12&page=1",
+      "label": "1",
+      "active": false
+    },
+    {
+      "url": "https://api.primecod.app/api/catalog/products?per_page=12&page=2",
+      "label": "2",
+      "active": false
+    },
+    {
+      "url": null,
+      "label": "...",
+      "active": false
+    },
+    {
+      "url": "https://api.primecod.app/api/catalog/products?per_page=12&page=33",
+      "label": "33",
+      "active": false
+    },
+    {
+      "url": "https://api.primecod.app/api/catalog/products?per_page=12&page=34",
+      "label": "34",
+      "active": false
+    },
+    {
+      "url": "https://api.primecod.app/api/catalog/products?per_page=12&page=35",
+      "label": "35",
+      "active": false
+    },
+    {
+      "url": "https://api.primecod.app/api/catalog/products?per_page=12&page=36",
+      "label": "36",
+      "active": false
+    },
+    {
+      "url": "https://api.primecod.app/api/catalog/products?per_page=12&page=37",
+      "label": "37",
+      "active": false
+    },
+    {
+      "url": "https://api.primecod.app/api/catalog/products?per_page=12&page=38",
+      "label": "38",
+      "active": false
+    },
+    {
+      "url": "https://api.primecod.app/api/catalog/products?per_page=12&page=39",
+      "label": "39",
+      "active": false
+    },
+    {
+      "url": "https://api.primecod.app/api/catalog/products?per_page=12&page=40",
+      "label": "40",
+      "active": false
+    },
+    {
+      "url": "https://api.primecod.app/api/catalog/products?per_page=12&page=41",
+      "label": "41",
+      "active": false
+    },
+    {
+      "url": "https://api.primecod.app/api/catalog/products?per_page=12&page=42",
+      "label": "42",
+      "active": true
+    },
+    {
+      "url": null,
+      "label": "Next &raquo;",
+      "active": false
+    }
+  ],
+  "next_page_url": null,
+  "path": "https://api.primecod.app/api/catalog/products",
+  "per_page": 12,
+  "prev_page_url": "https://api.primecod.app/api/catalog/products?per_page=12&page=41",
+  "to": 501,
+  "total": 501
+}
