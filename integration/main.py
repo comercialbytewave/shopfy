@@ -1,6 +1,7 @@
 """Orquestrador do projeto integration (catalogo unificado -> Shopify).
 
 Uso:
+    python main.py check                      # valida as credenciais da Shopify
     python main.py all                        # sincroniza as duas integracoes e abre a web (padrao)
     python main.py sync <ecomhub|primecod>   # compara SKUs do catalogo com a Shopify
     python main.py sync-all                   # sincroniza as duas integracoes
@@ -39,6 +40,16 @@ def main() -> None:
 
         print(f"\nServidor em http://127.0.0.1:{config.PORT}")
         run()
+
+    elif cmd == "check":
+        from src.shopify_client import ShopifyClient, ShopifyError
+
+        try:
+            shop = ShopifyClient().check()
+            print(f"OK! Credenciais validas. Loja: {shop['name']} ({shop['myshopifyDomain']})")
+        except ShopifyError as exc:
+            print(f"FALHA nas credenciais: {exc}")
+            sys.exit(1)
 
     elif cmd == "sync":
         if len(args) < 2:

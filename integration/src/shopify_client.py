@@ -57,6 +57,12 @@ class ShopifyClient:
         return payload["data"]
 
     # --------------------------------------------------------------------- #
+    def check(self) -> dict[str, Any]:
+        """Valida as credenciais com uma consulta minima. Levanta ShopifyError se invalidas."""
+        data = self.graphql("{ shop { name myshopifyDomain } }")
+        return data["shop"]
+
+    # --------------------------------------------------------------------- #
     def fetch_all_skus(self) -> dict[str, str]:
         """Devolve um mapa {sku: product_gid} de todas as variantes da loja."""
         query = """
