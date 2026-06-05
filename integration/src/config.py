@@ -18,10 +18,14 @@ UNIFIED_DATABASE_URL = os.getenv(
 
 SHOPIFY_STORE_DOMAIN = os.getenv("SHOPIFY_STORE_DOMAIN", "").strip()
 SHOPIFY_ACCESS_TOKEN = os.getenv("SHOPIFY_ACCESS_TOKEN", "").strip()
-SHOPIFY_API_VERSION = os.getenv("SHOPIFY_API_VERSION", "2025-10").strip()
+SHOPIFY_API_VERSION = os.getenv("SHOPIFY_API_VERSION", "2026-04").strip()
 SHOPIFY_CREATE_STATUS = os.getenv("SHOPIFY_CREATE_STATUS", "DRAFT").strip().upper()
 
 PORT = int(os.getenv("PORT", "5005"))
+
+# CDN do EcomHub para montar URLs absolutas de imagens
+# Imagens ficam em: {CDN}/public/products/{filename}__w-800.png
+ECOMHUB_CDN_URL = os.getenv("ECOMHUB_CDN_URL", "https://dropstudio360.fra1.digitaloceanspaces.com").strip()
 
 # Integracoes suportadas (devem casar com a coluna `integration` da tabela unificada)
 INTEGRATIONS = ("ecomhub", "primecod")

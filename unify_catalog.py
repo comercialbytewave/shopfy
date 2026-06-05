@@ -35,6 +35,13 @@ from urllib.parse import unquote, urlparse
 
 ROOT = Path(__file__).resolve().parent
 
+# Carrega variáveis do arquivo .env se estiver disponível
+try:
+    from dotenv import load_dotenv
+    load_dotenv(ROOT / "ecomhub" / ".env")
+except ImportError:
+    pass
+
 # (rotulo da integracao, caminho do products.json)
 SOURCES: list[tuple[str, Path]] = [
     ("ecomhub", ROOT / "ecomhub" / "data" / "products.json"),
@@ -278,6 +285,28 @@ def build_refresh(
 # --------------------------------------------------------------------------- #
 # Execucao
 # --------------------------------------------------------------------------- #
+def _find_postgres_container() -> str | None:
+    """Tenta encontrar um container docker rodando PostgreSQL."""
+    try:
+        res = subprocess.run(
+            ["docker", "ps", "--format", "{{.Names}}\t{{.Image}}"],
+            capture_output=True,
+            text=True,
+            check=True
+        )
+        for line in res.stdout.strip().split("\n"):
+            if not line:
+                continue
+            parts = line.split("\t")
+            if len(parts) >= 2:
+                name, image = parts[0], parts[1]
+                if "postgres" in name.lower() or "postgres" in image.lower():
+                    return name
+    except Exception:
+        pass
+    return None
+
+
 def _run_psql(database_url: str, sql_path: Path) -> None:
     parsed = urlparse(database_url)
     env = os.environ.copy()
@@ -294,7 +323,50 @@ def _run_psql(database_url: str, sql_path: Path) -> None:
         "-q",
         "-f", str(sql_path),
     ]
-    subprocess.run(cmd, check=True, env=env)
+    try:
+        subprocess.run(cmd, check=True, env=env)
+    except FileNotFoundError as e:
+        # Se psql não for encontrado localmente, tenta executar usando Docker
+        container_name = _find_postgres_container()
+        if container_name:
+            username = unquote(parsed.username or "postgres")
+            print(f"\n[INFO] 'psql' local não encontrado. Tentando aplicar SQL via container Docker '{container_name}' (usuário: {username})...", file=sys.stderr)
+            
+            docker_cmd = [
+                "docker", "exec", "-i", container_name,
+                "psql",
+                "-U", username,
+                "-d", dbname,
+                "-v", "ON_ERROR_STOP=1",
+                "-q",
+            ]
+            if parsed.password:
+                # Injeta a senha usando a flag -e no docker exec
+                docker_cmd.insert(2, "-e")
+                docker_cmd.insert(3, f"PGPASSWORD={unquote(parsed.password)}")
+            
+            try:
+                with open(sql_path, "r", encoding="utf-8") as f:
+                    subprocess.run(docker_cmd, stdin=f, check=True)
+                print(f"[INFO] SQL aplicado com sucesso via Docker no container '{container_name}'.")
+                return
+            except Exception as docker_err:
+                print(f"\n[ERRO] Falha ao executar psql no container Docker '{container_name}': {docker_err}", file=sys.stderr)
+                raise
+        else:
+            print(f"\n[ERRO] O comando '{cmd[0]}' não foi encontrado no sistema (PATH).", file=sys.stderr)
+            print(f"Por favor, verifique se o cliente PostgreSQL (psql) está instalado e configurado nas variáveis de ambiente (PATH),", file=sys.stderr)
+            print(f"ou se o container Docker do Postgres está rodando.", file=sys.stderr)
+            print(f"Caminho do SQL que seria executado: {sql_path}", file=sys.stderr)
+            print(f"Erro original: {e}\n", file=sys.stderr)
+            raise
+    except subprocess.CalledProcessError as e:
+        print(f"\n[ERRO] Falha ao executar o comando '{cmd[0]}'. Código de saída: {e.returncode}", file=sys.stderr)
+        print(f"Erro original: {e}\n", file=sys.stderr)
+        raise
+    except Exception as e:
+        print(f"\n[ERRO] Erro inesperado ao tentar executar o comando '{cmd[0]}': {e}\n", file=sys.stderr)
+        raise
 
 
 def main() -> None:
@@ -313,7 +385,18 @@ def main() -> None:
     )
     args = ap.parse_args()
 
-    database_url = os.getenv("UNIFIED_DATABASE_URL", DEFAULT_DATABASE_URL)
+    database_url = os.getenv("UNIFIED_DATABASE_URL")
+    if not database_url:
+        main_db_url = os.getenv("DATABASE_URL")
+        if main_db_url:
+            parsed = urlparse(main_db_url)
+            # Reconstrói usando o banco unified_catalog, preservando o host, porta e credenciais
+            database_url = f"{parsed.scheme}://{parsed.netloc}/unified_catalog"
+            if parsed.query:
+                database_url += f"?{parsed.query}"
+        else:
+            database_url = DEFAULT_DATABASE_URL
+
     datasets = [(label, _load(path)) for label, path in SOURCES]
     columns = build_columns(datasets)
 
@@ -368,4 +451,10 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:
+        import traceback
+        print(f"\n[ERRO CRÍTICO] Execução de unify_catalog.py falhou devido a uma exceção não tratada: {e}", file=sys.stderr)
+        traceback.print_exc()
+        sys.exit(1)

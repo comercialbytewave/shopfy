@@ -58,13 +58,54 @@ def ensure_status_table() -> None:
 
 
 # --------------------------------------------------------------------------- #
-# Leitura da tabela unificada -> SKUs do catalogo
+# Helpers internos
 # --------------------------------------------------------------------------- #
-def _variant_skus(productsvariants: Any) -> list[dict[str, Any]]:
-    """Extrai (sku, price) de cada variante do ecomhub.
+def _extract_first_image(images: Any) -> str | None:
+    """Extrai o path da primeira imagem do campo images (primecod JSON array).
 
-    O campo productsvariants e uma lista de variantes; o SKU fica em
-    variante.stockItems.sku e o preco em variante.price.
+    Formato: [{"id": 2659, "path": "https://...", "catalog_product_id": 1027}]
+    """
+    if isinstance(images, str):
+        try:
+            images = json.loads(images)
+        except (TypeError, ValueError):
+            return None
+    if isinstance(images, list) and images:
+        first = images[0]
+        if isinstance(first, dict):
+            return first.get("path")
+    return None
+
+
+def _build_image_url(raw: str | None) -> str | None:
+    """Constroi URL absoluta para imagens do ecomhub.
+
+    Entrada : /public/products/featuredImage-1742318156191-23565957.png
+    Saída   : https://dropstudio360.fra1.digitaloceanspaces.com/public/products/featuredImage-1742318156191-23565957__w-800.png
+    """
+    if not raw:
+        return None
+    if raw.startswith("http"):
+        return raw
+    base = config.ECOMHUB_CDN_URL.rstrip("/")
+    # Remove a extensao e adiciona o sufixo __w-800 exigido pelo CDN
+    if "." in raw.rsplit("/", 1)[-1]:
+        stem, dot, ext = raw.rpartition(".")
+        return f"{base}{stem}__w-800.{ext}"
+    return f"{base}{raw}"
+
+
+def _variant_skus(productsvariants: Any) -> list[dict[str, Any]]:
+    """Extrai variantes do ecomhub.
+
+    SKU na Shopify segue o padrao  V:{ecomhub_variant_id}
+    (ex: V:54368e3a-5c83-4aef-bdf2-0a98e00803aa).
+    Isso garante rastreamento correto independente do SKU do fornecedor.
+
+    - sku          : "V:{variant.id}"  — chave usada na Shopify
+    - supplier_sku : stockItems.sku    — referencia do fornecedor
+    - price        : variante.price    — custo do fornecedor
+    - label        : attributes → supplier_sku → id  (exibido como opcao)
     """
     if isinstance(productsvariants, str):
         try:
@@ -75,16 +116,39 @@ def _variant_skus(productsvariants: Any) -> list[dict[str, Any]]:
         return []
 
     out: list[dict[str, Any]] = []
+    seen_labels: set[str] = set()
     for var in productsvariants:
         if not isinstance(var, dict):
             continue
+        variant_id = var.get("id")
+        if not variant_id:
+            continue
+
+        shopify_sku = f"V:{variant_id}"
         stock = var.get("stockItems") or {}
-        sku = stock.get("sku") if isinstance(stock, dict) else None
-        if sku:
-            out.append({"sku": str(sku), "price": var.get("price")})
+        supplier_sku = (stock.get("sku") if isinstance(stock, dict) else None) or ""
+
+        raw_label = str(var.get("attributes") or supplier_sku or variant_id).strip()
+        # Deduplica labels — Shopify rejeita valores de opcao duplicados
+        label = raw_label
+        suffix = 1
+        while label in seen_labels:
+            suffix += 1
+            label = f"{raw_label} ({suffix})"
+        seen_labels.add(label)
+
+        out.append({
+            "sku": shopify_sku,
+            "supplier_sku": supplier_sku,
+            "price": var.get("price"),  # custo do fornecedor
+            "label": label,
+        })
     return out
 
 
+# --------------------------------------------------------------------------- #
+# Leitura da tabela unificada -> SKUs do catalogo
+# --------------------------------------------------------------------------- #
 def read_catalog_skus(integration: str) -> list[dict[str, Any]]:
     """Le os produtos da integracao na tabela unificada e devolve uma linha por SKU.
 
@@ -119,11 +183,54 @@ def read_catalog_skus(integration: str) -> list[dict[str, Any]]:
             for v in variants:
                 sku = v["sku"]
                 if sku in seen:
-                    continue  # mesmo SKU repetido entre produtos -> 1 linha so
+                    continue
                 seen.add(sku)
                 items.append({**base, "sku": sku, "price": v.get("price")})
 
     return items
+
+
+def get_product_by_pk(integration: str, product_pk: int) -> dict[str, Any] | None:
+    """Retorna o produto completo (com todas as variantes) para o pk dado.
+
+    Usa as colunas cost, description, image/featuredimage, images da tabela products.
+    """
+    sql = """
+        SELECT pk, id, name, description,
+               cost,
+               COALESCE(image, featuredimage) AS image_url,
+               images,
+               productsvariants, sku, price
+        FROM products
+        WHERE integration = %s AND pk = %s
+    """
+    with get_conn() as conn, conn.cursor(
+        cursor_factory=psycopg2.extras.RealDictCursor
+    ) as cur:
+        cur.execute(sql, (integration, product_pk))
+        row = cur.fetchone()
+        if not row:
+            return None
+        row = dict(row)
+        # Tenta image/featuredimage; se null, cai no array images (primecod)
+        raw_image = row.get("image_url") or _extract_first_image(row.get("images"))
+        image = _build_image_url(raw_image)
+
+        top_sku = row.get("sku")
+        if top_sku:
+            variants = [{"sku": str(top_sku), "price": row.get("price"), "label": str(top_sku)}]
+        else:
+            variants = _variant_skus(row.get("productsvariants"))
+
+        return {
+            "pk": row["pk"],
+            "id": row["id"],
+            "name": row["name"],
+            "description": row.get("description"),
+            "image": image,
+            "cost": row.get("cost"),
+            "variants": variants,
+        }
 
 
 # --------------------------------------------------------------------------- #
@@ -155,6 +262,10 @@ def upsert_statuses(
             price              = EXCLUDED.price,
             in_shopify         = EXCLUDED.in_shopify,
             shopify_product_id = EXCLUDED.shopify_product_id,
+            -- Se o produto foi removido da Shopify, libera para reenvio
+            sent               = CASE WHEN EXCLUDED.in_shopify THEN {STATUS_TABLE}.sent        ELSE false END,
+            sent_at            = CASE WHEN EXCLUDED.in_shopify THEN {STATUS_TABLE}.sent_at     ELSE NULL  END,
+            created_shopify_id = CASE WHEN EXCLUDED.in_shopify THEN {STATUS_TABLE}.created_shopify_id ELSE NULL END,
             last_checked_at    = now();
     """
     with get_conn() as conn, conn.cursor() as cur:
@@ -199,7 +310,13 @@ def fetch_statuses(integration: str, only: str | None = None) -> list[dict[str, 
 
 
 def counts(integration: str) -> dict[str, int]:
-    sql = f"""
+    """Retorna contagens em dois niveis:
+    - Por SKU  : cada variante conta separadamente (total, present, missing, sent).
+    - Por produto: variantes do mesmo produto_pk contam como 1 (total_p, present_p,
+                   missing_p, sent_p). Produto e "present" so se TODAS as variantes
+                   estiverem na Shopify.
+    """
+    sku_sql = f"""
         SELECT
             count(*)                                   AS total,
             count(*) FILTER (WHERE in_shopify)         AS present,
@@ -207,11 +324,30 @@ def counts(integration: str) -> dict[str, int]:
             count(*) FILTER (WHERE sent)               AS sent
         FROM {STATUS_TABLE} WHERE integration = %s
     """
+    prod_sql = f"""
+        SELECT
+            count(*)                                    AS total_p,
+            count(*) FILTER (WHERE all_in_shopify)      AS present_p,
+            count(*) FILTER (WHERE NOT all_in_shopify)  AS missing_p,
+            count(*) FILTER (WHERE any_sent)            AS sent_p
+        FROM (
+            SELECT
+                product_pk,
+                bool_and(in_shopify) AS all_in_shopify,
+                bool_or(sent)        AS any_sent
+            FROM {STATUS_TABLE}
+            WHERE integration = %s
+            GROUP BY product_pk
+        ) sub
+    """
     with get_conn() as conn, conn.cursor(
         cursor_factory=psycopg2.extras.RealDictCursor
     ) as cur:
-        cur.execute(sql, (integration,))
-        return dict(cur.fetchone())
+        cur.execute(sku_sql, (integration,))
+        result = dict(cur.fetchone())
+        cur.execute(prod_sql, (integration,))
+        result.update(cur.fetchone())
+    return result
 
 
 def get_status(integration: str, sku: str) -> dict[str, Any] | None:
@@ -234,3 +370,34 @@ def mark_sent(integration: str, sku: str, created_shopify_id: str) -> None:
     """
     with get_conn() as conn, conn.cursor() as cur:
         cur.execute(sql, (created_shopify_id, created_shopify_id, integration, sku))
+
+
+def remove_stale_skus(integration: str, current_skus: list[str]) -> int:
+    """Remove da status table SKUs que nao existem mais no catalogo atual.
+
+    Chamado apos upsert_statuses para limpar SKUs obsoletos (ex: mudanca de formato).
+    Retorna o numero de linhas removidas.
+    """
+    if not current_skus:
+        return 0
+    sql = f"""
+        DELETE FROM {STATUS_TABLE}
+        WHERE integration = %s
+        AND sku != ALL(%s)
+    """
+    with get_conn() as conn, conn.cursor() as cur:
+        cur.execute(sql, (integration, current_skus))
+        return cur.rowcount
+
+
+def mark_all_variants_sent(integration: str, product_pk: int, shopify_gid: str) -> None:
+    """Marca todas as variantes de um product_pk como enviadas."""
+    sql = f"""
+        UPDATE {STATUS_TABLE}
+        SET sent = true, sent_at = now(), selected = false,
+            in_shopify = true, created_shopify_id = %s,
+            shopify_product_id = COALESCE(shopify_product_id, %s)
+        WHERE integration = %s AND product_pk = %s
+    """
+    with get_conn() as conn, conn.cursor() as cur:
+        cur.execute(sql, (shopify_gid, shopify_gid, integration, product_pk))

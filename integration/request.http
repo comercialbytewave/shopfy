@@ -1,0 +1,120 @@
+###############################################################################
+# Requests da Shopify Admin API espelhando integration/src/shopify_client.py
+#
+# Extensao: "REST Client" (humao.rest-client) no VS Code.
+# Clique em "Send Request" acima de cada bloco.
+#
+# As variaveis sao lidas do .env da pasta integration/ via {{$dotenv NOME}}.
+# (mantenha este arquivo dentro de integration/, ao lado do .env)
+#
+# Toda a Admin API GraphQL usa POST. Nao existe GET no shopify_client.py;
+# o unico GET abaixo (shop.json) e da REST legada, so para teste de conexao.
+###############################################################################
+
+@domain = {{$dotenv SHOPIFY_STORE_DOMAIN}}
+@token = {{$dotenv SHOPIFY_ACCESS_TOKEN}}
+@version = {{$dotenv SHOPIFY_API_VERSION}}
+@gql = https://{{domain}}/admin/api/{{version}}/graphql.json
+
+
+### 1) check() — valida credenciais com consulta minima
+# POST /graphql.json  ->  { shop { name myshopifyDomain } }
+POST {{gql}}
+X-Shopify-Access-Token: {{token}}
+Content-Type: application/json
+
+{
+  "query": "{ shop { name myshopifyDomain } }"
+}
+
+
+### 2) fetch_all_skus() — lista SKUs das variantes (1a pagina, 250 itens)
+# Repita trocando "cursor" pelo pageInfo.endCursor enquanto hasNextPage = true.
+POST {{gql}}
+X-Shopify-Access-Token: {{token}}
+Content-Type: application/json
+
+{
+  "query": "query($cursor: String) { productVariants(first: 250, after: $cursor) { nodes { sku product { id } } pageInfo { hasNextPage endCursor } } }",
+  "variables": {
+    "cursor": null
+  }
+}
+
+
+### 3) create_product() passo 1 — productCreate (produto + variante default)
+# Guarde o product.id e o variants.nodes[0].id da resposta para o passo 4.
+POST {{gql}}
+X-Shopify-Access-Token: {{token}}
+Content-Type: application/json
+
+{
+  "query": "mutation($product: ProductCreateInput!) { productCreate(product: $product) { product { id variants(first: 1) { nodes { id } } } userErrors { field message } } }",
+  "variables": {
+    "product": {
+      "title": "Produto de teste (REST Client)",
+      "status": "DRAFT"
+    }
+  }
+}
+
+
+### 4) create_product() passo 2 — productVariantsBulkUpdate (SKU + preco)
+# Substitua productId e o variants[0].id pelos IDs retornados no passo 3.
+POST {{gql}}
+X-Shopify-Access-Token: {{token}}
+Content-Type: application/json
+
+{
+  "query": "mutation($productId: ID!, $variants: [ProductVariantsBulkInput!]!) { productVariantsBulkUpdate(productId: $productId, variants: $variants) { productVariants { id } userErrors { field message } } }",
+  "variables": {
+    "productId": "gid://shopify/Product/COLOQUE_O_ID_AQUI",
+    "variants": [
+      {
+        "id": "gid://shopify/ProductVariant/COLOQUE_O_ID_AQUI",
+        "inventoryItem": { "sku": "SKU-TESTE-001" },
+        "price": "99.90"
+      }
+    ]
+  }
+}
+
+
+### 5) buscar produtos (GraphQL, POST) — lista produtos com variantes/SKU/preco
+# Forma atual/recomendada. Pagine trocando "cursor" pelo pageInfo.endCursor.
+POST {{gql}}
+X-Shopify-Access-Token: {{token}}
+Content-Type: application/json
+
+{
+  "query": "query($cursor: String) { products(first: 50, after: $cursor) { nodes { id title status totalInventory variants(first: 10) { nodes { id sku price } } } pageInfo { hasNextPage endCursor } } }",
+  "variables": {
+    "cursor": null
+  }
+}
+
+
+### 6) buscar 1 produto por SKU (GraphQL, POST) — usa a busca da Shopify
+# Troque SKU-TESTE-001 pelo SKU desejado (query string da Admin API).
+POST {{gql}}
+X-Shopify-Access-Token: {{token}}
+Content-Type: application/json
+
+{
+  "query": "query($q: String!) { products(first: 5, query: $q) { nodes { id title variants(first: 10) { nodes { id sku price } } } } }",
+  "variables": {
+    "q": "sku:SKU-TESTE-001"
+  }
+}
+
+
+### 7) buscar produtos (GET REST legada) — para quem quer um GET literal
+# REST virou legada em out/2024; prefira o GraphQL acima. limit max = 250.
+GET https://{{domain}}/admin/api/{{version}}/products.json?limit=250
+X-Shopify-Access-Token: {{token}}
+
+
+### (bonus) GET REST legada — teste rapido de conectividade/credenciais
+# Nao usado pelo cliente; util so para validar dominio+token no terminal.
+GET https://{{domain}}/admin/api/{{version}}/shop.json
+X-Shopify-Access-Token: {{token}}

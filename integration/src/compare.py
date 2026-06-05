@@ -32,6 +32,11 @@ def run_sync(integration: str) -> dict[str, int]:
 
     total, present = db.upsert_statuses(integration, items, shopify_index)
 
+    current_skus = [it["sku"] for it in items]
+    deleted = db.remove_stale_skus(integration, current_skus)
+    if deleted:
+        print(f"  [sync] {integration}: {deleted} SKU(s) obsoleto(s) removido(s).")
+
     if warning:
         print(f"  [aviso] {warning}")
     print(
