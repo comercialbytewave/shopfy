@@ -1,0 +1,137 @@
+// Schema Prisma da base UNIFICADA (unified_catalog).
+//
+// Modela as tabelas do banco para onde o unify_catalog.py escreve e de onde a
+// integration/ le: a tabela `products` (uniao dos campos de ecomhub + primecod),
+// a tabela `Category` (mesmo padrao dos projetos ecomhub/primecod) e a tabela
+// de comparacao `shopify_sku_status` usada pela integration.
+//
+// Fonte de verdade da UNIAO de colunas de products continua sendo o
+// unify_catalog.py (cria/garante colunas via SQL). Este schema documenta o
+// formato atual e permite criar as tabelas via Prisma (`prisma db push`).
+//
+// Conexao: env("UNIFIED_DATABASE_URL")
+//   ex.: postgresql://postgres:123456@localhost:5432/unified_catalog
+//
+// Para criar/atualizar as tabelas SEM gerar o client Python (evita sobrescrever
+// o client gerado de outro projeto no mesmo venv):
+//   python -m prisma db push --schema prisma/schema.prisma --skip-generate
+
+generator client {
+  provider             = "prisma-client-py"
+  recursive_type_depth = 5
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("UNIFIED_DATABASE_URL")
+}
+
+/// Tabela unificada de produtos (ecomhub + primecod).
+/// A coluna `integration` indica a origem ('ecomhub' ou 'primecod') e a chave
+/// natural de cada origem fica em `id`. A unicidade e por (integration, id).
+model Product {
+  pk          Int    @id @default(autoincrement())
+  integration String
+  id          String
+
+  // --- Campos do EcomHub ---------------------------------------------------
+  name                        String?
+  isbundle                    Boolean?
+  createdat                   String?
+  variantsattributes          String?
+  featuredimage               String?
+  status                      String?
+  isprivate                   Boolean?
+  workspace_id                Int?
+  tier                        Int?
+  markup                      String?
+  quantitymodifier            Int?
+  provider_id                 String?
+  price                       String?
+  analyzis                    String?
+  productsprices              Json?
+  productsvariants            Json?
+  products_productscategories Json?
+  products_productstags       Json?
+  description                 String?
+
+  // Traducao da descricao (preenchida pela integration/ via Groq).
+  description_translate String?
+  language_translate    String?
+  // Descricao melhorada (persuasiva/SEO) gerada pela integration/ via Groq.
+  description_upgrade String?
+  // Traducao da descricao melhorada (quando ela existe).
+  description_upgrade_translate String?
+
+  // --- Campos do Primecod --------------------------------------------------
+  seller_id            Int?
+  image                String?
+  sku                  String?
+  quantity             Int?
+  weight               Int?
+  url                  String?
+  cost                 String?
+  badge                String?
+  // category_id e text: o EcomHub usa UUID (string) e o Primecod usa inteiro;
+  // a uniao das duas origens vira texto (lossless).
+  category_id          String?
+  category_name        String?
+  created_at           String?
+  updated_at           String?
+  creatives_url        String?
+  shipping_service_id  Int?
+  shipping_service_2   String?
+  shipping_service_3   String?
+  shipping_service_4   String?
+  big_arena_product_id String?
+  big_arena_variant_id String?
+  deleted_at           String?
+  deleted_by           String?
+  sourcing_price       String?
+  total_profit         String?
+  total_units_sold     Int?
+  total_orders         Int?
+  is_mystery_box       Int?
+  has_packaging        Int?
+  dropea_product_id    Int?
+  auto_upsell_enabled  Int?
+  stock                String?
+  stock_label          String?
+  countryids           Json?
+  country_ids          Json?
+  countries            Json?
+  images               Json?
+
+  @@unique([integration, id], map: "products_integration_id_key")
+  @@map("products")
+}
+
+/// Tabela de categorias (mesmo modelo usado em ecomhub e primecod).
+model Category {
+  id   String @id @db.VarChar(250)
+  name String @db.VarChar(250)
+
+  @@map("Category")
+}
+
+/// Estado de comparacao por SKU/integracao mantido pela integration/.
+/// Espelha o DDL de integration/src/db.py (ensure_status_table).
+model ShopifySkuStatus {
+  id                 Int       @id @default(autoincrement())
+  integration        String
+  sku                String
+  product_pk         Int?
+  product_id         String?
+  product_name       String?
+  price              String?
+  in_shopify         Boolean   @default(false)
+  shopify_product_id String?
+  selected           Boolean   @default(false)
+  sent               Boolean   @default(false)
+  sent_at            DateTime? @db.Timestamptz(6)
+  created_shopify_id String?
+  last_checked_at    DateTime? @default(now()) @db.Timestamptz(6)
+
+  @@unique([integration, sku])
+  @@map("shopify_sku_status")
+}

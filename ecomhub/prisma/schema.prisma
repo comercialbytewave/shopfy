@@ -1,6 +1,6 @@
 // Arquivo gerado automaticamente por src/schema_generator.py
-// Gerado em 2026-06-03T14:09:34
-// Baseado em 2 registro(s) de productsWorkspaces
+// Gerado em 2026-06-06T14:31:29
+// Baseado em 1230 registro(s) de productsWorkspaces
 
 generator client {
   provider             = "prisma-client-py"
@@ -15,8 +15,34 @@ datasource db {
 model Product {
   id String @id
   name String
+  isBundle Boolean
   createdAt DateTime
-  isActive Boolean
+  variantsAttributes String?
+  featuredImage String?
+  status String
+  isPrivate Boolean
+  workspace_id Int
+  tier Int?
+  markup String?
+  quantityModifier Int
+  provider_id String
+  price String?
+  analyzis String?
+  productsPrices Json
+  productsVariants Json
+  products_productsCategories Json
+  products_productsTags Json
+  description String
+  descript_translator String
+  category_id String? @db.VarChar(250)
+  category_name String?
 
   @@map("products")
+}
+
+model Category {
+  id   String @id @db.VarChar(250)
+  name String @db.VarChar(250)
+
+  @@map("Category")
 }

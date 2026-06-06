@@ -234,6 +234,100 @@ def get_product_by_pk(integration: str, product_pk: int) -> dict[str, Any] | Non
 
 
 # --------------------------------------------------------------------------- #
+# Traducao de descricao
+# --------------------------------------------------------------------------- #
+def get_product_description(integration: str, product_id: str) -> dict[str, Any] | None:
+    """Retorna a descricao (e a traducao ja salva, se houver) de um produto.
+
+    Usa a chave natural `id` (estavel) em vez de `pk` (serial que muda quando o
+    unify_catalog.py reconstroi a tabela products).
+    """
+    sql = """
+        SELECT pk, id, name, description,
+               description_translate, language_translate,
+               description_upgrade, description_upgrade_translate
+        FROM products
+        WHERE integration = %s AND id = %s
+    """
+    with get_conn() as conn, conn.cursor(
+        cursor_factory=psycopg2.extras.RealDictCursor
+    ) as cur:
+        cur.execute(sql, (integration, product_id))
+        row = cur.fetchone()
+        return dict(row) if row else None
+
+
+def get_products_text(
+    integration: str, product_ids: Iterable[str]
+) -> dict[str, dict[str, Any]]:
+    """Retorna {id: {description, description_translate, language_translate}}.
+
+    Usado para exibir a descricao e a traducao direto na listagem. Indexado por
+    `id` (chave natural estavel), nao por `pk`.
+    """
+    ids = [pid for pid in {p for p in product_ids} if pid]
+    if not ids:
+        return {}
+    sql = """
+        SELECT id, description,
+               description_translate, language_translate,
+               description_upgrade, description_upgrade_translate
+        FROM products
+        WHERE integration = %s AND id = ANY(%s)
+    """
+    with get_conn() as conn, conn.cursor(
+        cursor_factory=psycopg2.extras.RealDictCursor
+    ) as cur:
+        cur.execute(sql, (integration, ids))
+        return {row["id"]: dict(row) for row in cur.fetchall()}
+
+
+def save_translation(
+    integration: str,
+    product_id: str,
+    description_translate: str | None,
+    language_translate: str,
+    description_upgrade_translate: str | None = None,
+) -> None:
+    """Grava a traducao da descricao (e da descricao melhorada, se houver).
+
+    Chave: id (estavel). `description_upgrade_translate` so e gravado quando o
+    produto tem uma descricao melhorada para traduzir.
+    """
+    sql = """
+        UPDATE products
+        SET description_translate = %s,
+            language_translate = %s,
+            description_upgrade_translate = %s
+        WHERE integration = %s AND id = %s
+    """
+    with get_conn() as conn, conn.cursor() as cur:
+        cur.execute(
+            sql,
+            (
+                description_translate,
+                language_translate,
+                description_upgrade_translate,
+                integration,
+                product_id,
+            ),
+        )
+
+
+def save_description_upgrade(
+    integration: str, product_id: str, description_upgrade: str
+) -> None:
+    """Grava a descricao melhorada na coluna products.description_upgrade (chave: id)."""
+    sql = """
+        UPDATE products
+        SET description_upgrade = %s
+        WHERE integration = %s AND id = %s
+    """
+    with get_conn() as conn, conn.cursor() as cur:
+        cur.execute(sql, (description_upgrade, integration, product_id))
+
+
+# --------------------------------------------------------------------------- #
 # Tabela de comparacao
 # --------------------------------------------------------------------------- #
 def upsert_statuses(

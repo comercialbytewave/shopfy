@@ -23,6 +23,14 @@ SHOPIFY_CREATE_STATUS = os.getenv("SHOPIFY_CREATE_STATUS", "DRAFT").strip().uppe
 
 PORT = int(os.getenv("PORT", "5005"))
 
+# --- Groq (traducao de descricoes via IA) --------------------------------- #
+# API compativel com OpenAI: POST {GROQ_API_URL} com Authorization Bearer.
+GROQ_API_KEY = os.getenv("GROQ_API_KEY", "").strip()
+GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile").strip()
+GROQ_API_URL = os.getenv(
+    "GROQ_API_URL", "https://api.groq.com/openai/v1/chat/completions"
+).strip()
+
 # CDN do EcomHub para montar URLs absolutas de imagens
 # Imagens ficam em: {CDN}/public/products/{filename}__w-800.png
 ECOMHUB_CDN_URL = os.getenv("ECOMHUB_CDN_URL", "https://dropstudio360.fra1.digitaloceanspaces.com").strip()
@@ -33,6 +41,10 @@ INTEGRATIONS = ("ecomhub", "primecod")
 
 def has_shopify_credentials() -> bool:
     return bool(SHOPIFY_STORE_DOMAIN and SHOPIFY_ACCESS_TOKEN)
+
+
+def has_groq_credentials() -> bool:
+    return bool(GROQ_API_KEY)
 
 
 def db_connect_kwargs() -> dict[str, object]:

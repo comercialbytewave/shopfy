@@ -14,6 +14,7 @@ from datetime import datetime
 from typing import Any
 
 from . import config
+from .categories import import_categories
 from .schema_generator import Column, analyze
 
 
@@ -101,6 +102,10 @@ async def _import() -> int:
                 errors += 1
                 if errors <= 5:
                     print(f"  [erro] registro nao importado: {exc}")
+
+        # Importa as categorias na tabela Category (sem duplicar).
+        cat_count = await import_categories(db)
+        print(f"  {cat_count} categoria(s) na tabela 'Category'.")
     finally:
         await db.disconnect()
 

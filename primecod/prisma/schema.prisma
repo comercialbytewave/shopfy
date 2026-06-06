@@ -54,3 +54,10 @@ model Product {
 
   @@map("products")
 }
+
+model Category {
+  id   String @id @db.VarChar(250)
+  name String @db.VarChar(250)
+
+  @@map("Category")
+}

@@ -1,9 +1,10 @@
 """Orquestrador do robo EcomHub.
 
 Uso:
-    python main.py capture   # faz login e captura o JSON de produtos
-    python main.py unify     # atualiza a tabela unificada (unified_catalog) sem dropar
-    python main.py all       # captura + unify (padrao)
+    python main.py capture       # faz login, captura os produtos e ja preenche as descricoes
+    python main.py descriptions  # preenche so as descricoes no products.json existente (sem repaginar)
+    python main.py unify         # atualiza a tabela unificada (unified_catalog) sem dropar
+    python main.py all           # captura + unify (padrao)
 
 Comandos legados (banco proprio per-projeto via Prisma; NAO usar com a tabela
 unificada, pois `prisma db push` reseta/dropa a tabela):
@@ -32,13 +33,18 @@ def _env_with_venv_bin() -> dict[str, str]:
     env["PATH"] = bin_dir + os.pathsep + env.get("PATH", "")
     return env
 from src.importer import run_import
-from src.robot import run_capture
+from src.robot import run_capture, run_fill_descriptions
 from src.schema_generator import run_generate
 
 
 def step_capture() -> None:
     print("\n=== ETAPA: CAPTURA ===")
     run_capture()
+
+
+def step_descriptions() -> None:
+    print("\n=== ETAPA: PREENCHER DESCRICOES (products.json existente) ===")
+    run_fill_descriptions()
 
 
 def step_schema() -> None:
@@ -81,6 +87,7 @@ def step_unify() -> None:
 
 STEPS = {
     "capture": step_capture,
+    "descriptions": step_descriptions,
     "schema": step_schema,
     "push": step_push,
     "import": step_import,

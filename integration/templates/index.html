@@ -49,6 +49,41 @@
     .search-wrap input:focus { border-color:#3457d5; }
     .search-wrap::before { content:"🔍"; position:absolute; left:9px; top:50%; transform:translateY(-50%); font-size:12px; pointer-events:none; }
     .no-results { text-align:center; color:#9aa3b2; padding:24px; }
+    .tr-btn { width:28px; height:28px; padding:0; display:inline-flex; align-items:center; justify-content:center; border-radius:8px; background:#1e3a2d; border:1px solid #2e6a4e; font-size:14px; line-height:1; }
+    .tr-btn:hover:not(:disabled) { background:#2a5440; transform:scale(1.1); }
+    .tr-btn:disabled { opacity:.4; cursor:not-allowed; }
+    .up-btn { width:28px; height:28px; padding:0; display:inline-flex; align-items:center; justify-content:center; border-radius:8px; background:#2a1f4d; border:1px solid #4a3a80; font-size:14px; line-height:1; }
+    .up-btn:hover:not(:disabled) { background:#3a2f6a; transform:scale(1.1); }
+    .up-btn:disabled { opacity:.4; cursor:not-allowed; }
+    .up-btn.loading { opacity:.6; cursor:progress; }
+    /* Modal de tradução */
+    .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.6); display:none; align-items:center; justify-content:center; z-index:100; }
+    .modal-overlay.open { display:flex; }
+    .modal { background:#161a22; border:1px solid #2e3445; border-radius:12px; width:min(560px,92vw); max-height:88vh; overflow:auto; padding:20px; box-shadow:0 12px 40px rgba(0,0,0,.5); }
+    .modal h2 { font-size:16px; margin:0 0 4px; }
+    .modal .modal-prod { font-size:13px; color:#9aa3b2; margin-bottom:14px; }
+    .modal label { display:block; font-size:12px; color:#9aa3b2; margin:10px 0 4px; }
+    .modal select { width:100%; background:#1b1f29; border:1px solid #2e3445; border-radius:8px; color:#e7e9ee; font-size:13px; padding:8px 10px; outline:none; }
+    .modal select:focus { border-color:#3457d5; }
+    .modal-actions { display:flex; gap:8px; margin-top:16px; }
+    .modal-result { margin-top:16px; border-top:1px solid #232838; padding-top:12px; display:none; }
+    .modal-result.show { display:block; }
+    .modal-result .res-lang { font-size:12px; color:#7aa2ff; margin-bottom:6px; }
+    .modal-result .res-text { background:#0f1115; border:1px solid #232838; border-radius:8px; padding:10px; font-size:13px; white-space:pre-wrap; line-height:1.5; max-height:40vh; overflow:auto; }
+    .modal-err { color:#ff9c9c; font-size:13px; margin-top:12px; display:none; }
+    .modal-err.show { display:block; }
+    .modal-close { background:#1b1f29; color:#cdd3df; }
+    /* Descrição e tradução na listagem */
+    details.dlist { margin-top:5px; }
+    details.dlist summary { cursor:pointer; font-size:11px; color:#9aa3b2; list-style:none; display:inline-flex; align-items:center; gap:4px; }
+    details.dlist summary::before { content:"▶"; font-size:9px; transition:transform .15s; }
+    details.dlist[open] summary::before { transform:rotate(90deg); }
+    details.dlist.tr summary { color:#7aa2ff; }
+    details.dlist.up summary { color:#b09aff; }
+    .desc-box { margin:6px 0 0; padding:8px 10px; background:#0f1115; border:1px solid #232838; border-radius:8px; font-size:12px; line-height:1.5; color:#cdd3df; max-height:220px; overflow:auto; }
+    .desc-box img { max-width:100%; height:auto; }
+    .desc-box * { max-width:100%; }
+    .tr-empty { font-size:11px; color:#6b7280; }
   </style>
 </head>
 <body>
@@ -145,6 +180,47 @@
               </details>
               {% endif %}
             {% endif %}
+
+            {% if r.description %}
+            <details class="dlist">
+              <summary>ver descrição</summary>
+              <div class="desc-box">{{ r.description | safe }}</div>
+            </details>
+            {% endif %}
+
+            <details class="dlist tr" id="tr-row-{{ r.product_id }}">
+              <summary>
+                ver tradução
+                {% if r.language_translate %}<span class="badge vars" style="font-size:10px;padding:1px 5px">{{ r.language_translate }}</span>{% endif %}
+              </summary>
+              <div class="desc-box tr-content">
+                {% if r.description_translate %}{{ r.description_translate | safe }}
+                {% else %}<span class="tr-empty">Sem tradução ainda — clique em 🌐 para traduzir.</span>{% endif %}
+              </div>
+            </details>
+
+            <details class="dlist up" id="up-row-{{ r.product_id }}">
+              <summary>
+                ver descrição melhorada
+                {% if r.description_upgrade %}<span class="badge vars" style="font-size:10px;padding:1px 5px">✨ IA</span>{% endif %}
+              </summary>
+              <div class="desc-box up-content">
+                {% if r.description_upgrade %}{{ r.description_upgrade | safe }}
+                {% else %}<span class="tr-empty">Sem versão melhorada ainda — clique em ✨ para gerar.</span>{% endif %}
+              </div>
+            </details>
+
+            <details class="dlist tr" id="tr-up-row-{{ r.product_id }}"
+                     style="{{ '' if r.description_upgrade else 'display:none' }}">
+              <summary>
+                ver tradução da melhorada
+                {% if r.description_upgrade_translate and r.language_translate %}<span class="badge vars" style="font-size:10px;padding:1px 5px">{{ r.language_translate }}</span>{% endif %}
+              </summary>
+              <div class="desc-box tr-up-content">
+                {% if r.description_upgrade_translate %}{{ r.description_upgrade_translate | safe }}
+                {% else %}<span class="tr-empty">Sem tradução da versão melhorada — clique em 🌐 para gerar.</span>{% endif %}
+              </div>
+            </details>
           </td>
           <td>{{ r.price or '' }}</td>
           <td>
@@ -153,14 +229,26 @@
           </td>
           <td>{% if r.sent %}<span class=”badge sent”>enviado</span>{% endif %}</td>
           <td>
-            {% if r.product_id %}
-              {% if integration == 'ecomhub' %}
-                {% set ext_url = 'https://go.ecomhub.app/products/' ~ r.product_id %}
-              {% else %}
-                {% set ext_url = 'https://primecod.app/pt/cod-drop/' ~ r.product_id %}
+            <div style="display:inline-flex; gap:6px; align-items:center">
+              <button type="button" class="up-btn"
+                      data-id="{{ r.product_id }}"
+                      data-name="{{ (r.product_name or '') | e }}"
+                      title="{{ 'Melhorar descrição (IA)' if has_groq else 'Configure GROQ_API_KEY no .env' }}"
+                      {{ 'disabled' if not has_groq or not r.product_id }}>✨</button>
+              <button type="button" class="tr-btn"
+                      data-id="{{ r.product_id }}"
+                      data-name="{{ (r.product_name or '') | e }}"
+                      title="{{ 'Traduzir descrição' if has_groq else 'Configure GROQ_API_KEY no .env' }}"
+                      {{ 'disabled' if not has_groq or not r.product_id }}>🌐</button>
+              {% if r.product_id %}
+                {% if integration == 'ecomhub' %}
+                  {% set ext_url = 'https://go.ecomhub.app/products/' ~ r.product_id %}
+                {% else %}
+                  {% set ext_url = 'https://primecod.app/pt/cod-drop/' ~ r.product_id %}
+                {% endif %}
+                <a class='ext-link' href='{{ ext_url }}' target='_blank' rel='noopener' title='Ver no fornecedor'>↗</a>
               {% endif %}
-              <a class='ext-link' href='{{ ext_url }}' target='_blank' rel='noopener' title='Ver no fornecedor'>↗</a>
-            {% endif %}
+            </div>
           </td>
         </tr>
         {% endfor %}
@@ -173,7 +261,148 @@
       </tbody>
     </table>
   </form>
+  <!-- Modal de tradução -->
+  <div class="modal-overlay" id="tr-modal">
+    <div class="modal">
+      <h2>🌐 Traduzir descrição</h2>
+      <div class="modal-prod" id="tr-prod">—</div>
+
+      <label for="tr-country">País de destino</label>
+      <select id="tr-country">
+        {% for c in countries %}
+        <option value="{{ c.code }}">{{ c.name }} — {{ c.language }}</option>
+        {% endfor %}
+      </select>
+
+      <div class="modal-actions">
+        <button type="button" id="tr-run">Traduzir</button>
+        <button type="button" class="modal-close" id="tr-cancel">Fechar</button>
+      </div>
+
+      <div class="modal-err" id="tr-err"></div>
+      <div class="modal-result" id="tr-result">
+        <div class="res-lang" id="tr-result-lang"></div>
+        <div class="res-text" id="tr-result-text"></div>
+      </div>
+    </div>
+  </div>
+
   <script>
+    // ----- Tradução via Groq -----
+    const TR_INTEGRATION = {{ integration | tojson }};
+    const trModal   = document.getElementById('tr-modal');
+    const trProd    = document.getElementById('tr-prod');
+    const trCountry = document.getElementById('tr-country');
+    const trRun     = document.getElementById('tr-run');
+    const trErr     = document.getElementById('tr-err');
+    const trResult  = document.getElementById('tr-result');
+    const trResLang = document.getElementById('tr-result-lang');
+    const trResText = document.getElementById('tr-result-text');
+    let trId = null;
+
+    function trOpen(id, name) {
+      trId = id;
+      trProd.textContent = name || ('Produto ' + id);
+      trErr.classList.remove('show'); trErr.textContent = '';
+      trResult.classList.remove('show');
+      trRun.disabled = false; trRun.textContent = 'Traduzir';
+      trModal.classList.add('open');
+    }
+    function trClose() { trModal.classList.remove('open'); }
+
+    // Atualiza o conteúdo + selo de um bloco expansível da listagem.
+    function setRowBlock(detId, contentSel, text, badgeText) {
+      const det = document.getElementById(detId);
+      if (!det || text == null) return;
+      const content = det.querySelector(contentSel);
+      if (content) content.textContent = text;
+      let badge = det.querySelector('summary .badge');
+      if (!badge) {
+        badge = document.createElement('span');
+        badge.className = 'badge vars';
+        badge.style.cssText = 'font-size:10px;padding:1px 5px';
+        det.querySelector('summary').appendChild(badge);
+      }
+      badge.textContent = badgeText;
+      det.open = true;
+    }
+
+    document.querySelectorAll('.tr-btn').forEach(btn => {
+      btn.addEventListener('click', () => trOpen(btn.dataset.id, btn.dataset.name));
+    });
+
+    // ----- Melhorar descrição (Groq) — inline, sem popup -----
+    document.querySelectorAll('.up-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.dataset.id;
+        const det = document.getElementById('up-row-' + id);
+        const content = det ? det.querySelector('.up-content') : null;
+        if (det) det.open = true;
+        if (content) content.innerHTML = '<span class="tr-empty">Melhorando descrição…</span>';
+        btn.disabled = true; btn.classList.add('loading');
+        try {
+          const body = new FormData();
+          body.append('integration', TR_INTEGRATION);
+          body.append('product_id', id);
+          const resp = await fetch('{{ url_for("improve_product") }}', { method: 'POST', body });
+          const data = await resp.json();
+          if (!data.ok) throw new Error(data.error || 'Falha ao melhorar.');
+          if (content) content.textContent = data.upgrade;
+          if (det) {
+            let badge = det.querySelector('summary .badge');
+            if (!badge) {
+              badge = document.createElement('span');
+              badge.className = 'badge vars';
+              badge.style.cssText = 'font-size:10px;padding:1px 5px';
+              det.querySelector('summary').appendChild(badge);
+            }
+            badge.textContent = '✨ IA';
+          }
+          // Agora ha descricao melhorada: libera o bloco de tradução dela.
+          const upTr = document.getElementById('tr-up-row-' + id);
+          if (upTr) upTr.style.display = '';
+        } catch (err) {
+          if (content) content.innerHTML = '<span style="color:#ff9c9c">' + err.message + '</span>';
+        } finally {
+          btn.disabled = false; btn.classList.remove('loading');
+        }
+      });
+    });
+    document.getElementById('tr-cancel').addEventListener('click', trClose);
+    trModal.addEventListener('click', e => { if (e.target === trModal) trClose(); });
+
+    trRun.addEventListener('click', async () => {
+      if (!trId) return;
+      trErr.classList.remove('show');
+      trResult.classList.remove('show');
+      trRun.disabled = true; trRun.textContent = 'Traduzindo…';
+      try {
+        const body = new FormData();
+        body.append('integration', TR_INTEGRATION);
+        body.append('product_id', trId);
+        body.append('country', trCountry.value);
+        const resp = await fetch('{{ url_for("translate_product") }}', { method: 'POST', body });
+        const data = await resp.json();
+        if (!data.ok) throw new Error(data.error || 'Falha na tradução.');
+        trResLang.textContent = 'Idioma: ' + data.language;
+        trResText.textContent = data.translation || data.upgrade_translation || '';
+        trResult.classList.add('show');
+
+        // Atualiza as linhas da listagem ao vivo (sem recarregar a página).
+        setRowBlock('tr-row-' + trId, '.tr-content', data.translation, data.language);
+        if (data.upgrade_translation) {
+          const up = document.getElementById('tr-up-row-' + trId);
+          if (up) up.style.display = '';
+          setRowBlock('tr-up-row-' + trId, '.tr-up-content', data.upgrade_translation, data.language);
+        }
+      } catch (err) {
+        trErr.textContent = err.message;
+        trErr.classList.add('show');
+      } finally {
+        trRun.disabled = false; trRun.textContent = 'Traduzir';
+      }
+    });
+
     const searchInput = document.getElementById('search');
     searchInput.addEventListener('input', () => {
       const q = searchInput.value.trim().toLowerCase();

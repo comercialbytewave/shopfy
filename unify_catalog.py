@@ -154,6 +154,104 @@ def build_columns(
 
 
 # --------------------------------------------------------------------------- #
+# Categorias
+# --------------------------------------------------------------------------- #
+ECOMHUB_CATEGORIES_JSON = ROOT / "ecomhub" / "data" / "categories.json"
+
+
+def _ecomhub_category_fields(record: dict[str, Any]) -> tuple[str | None, str | None]:
+    """Extrai (category_id, category_name) de products_productsCategories.
+
+    O campo e uma lista de {"productsCategories": {"id": ..., "name": ...}}.
+    Um produto pode ter varias categorias; usamos a ultima (mais especifica).
+    """
+    raw = record.get("products_productsCategories")
+    if isinstance(raw, str):
+        try:
+            raw = json.loads(raw)
+        except ValueError:
+            return None, None
+    if not isinstance(raw, list):
+        return None, None
+    chosen: dict[str, Any] | None = None
+    for item in raw:
+        if isinstance(item, dict):
+            cat = item.get("productsCategories")
+            if isinstance(cat, dict) and cat.get("id") is not None:
+                chosen = cat  # mantem a ultima valida (mais especifica)
+    if not chosen:
+        return None, None
+    name = chosen.get("name")
+    return str(chosen["id"]), (str(name) if name is not None else None)
+
+
+def enrich_ecomhub_categories(records: list[dict[str, Any]]) -> None:
+    """Preenche category_id/category_name de cada produto EcomHub (in place)."""
+    for rec in records:
+        cid, cname = _ecomhub_category_fields(rec)
+        rec["category_id"] = cid
+        rec["category_name"] = cname
+
+
+def collect_categories(
+    datasets: list[tuple[str, list[dict[str, Any]]]],
+) -> list[dict[str, str]]:
+    """Junta as categorias de todas as origens, sem duplicar (chave = id).
+
+    Fontes:
+      - ecomhub/data/categories.json (lista mestre capturada da API).
+      - category_id/category_name presentes nos proprios produtos (ecomhub ja
+        enriquecido + primecod).
+    """
+    cats: dict[str, str] = {}
+
+    if ECOMHUB_CATEGORIES_JSON.exists():
+        try:
+            master = json.loads(ECOMHUB_CATEGORIES_JSON.read_text(encoding="utf-8"))
+        except ValueError:
+            master = []
+        for c in master if isinstance(master, list) else []:
+            if isinstance(c, dict) and c.get("id") is not None:
+                cats[str(c["id"])] = str(c.get("name") or "")
+
+    for _label, records in datasets:
+        for rec in records:
+            cid = rec.get("category_id")
+            if cid is None:
+                continue
+            cid = str(cid)
+            cname = rec.get("category_name")
+            # Nao sobrescreve um nome ja conhecido com vazio.
+            if cid not in cats or (not cats[cid] and cname):
+                cats[cid] = str(cname) if cname is not None else cats.get(cid, "")
+
+    return [{"id": cid, "name": name} for cid, name in cats.items()]
+
+
+def build_categories_sql(categories: list[dict[str, str]]) -> str:
+    """DDL nao-destrutivo + upsert da tabela Category (sem duplicar)."""
+    lines = [
+        'CREATE TABLE IF NOT EXISTS "Category" (',
+        '  "id" varchar(250) PRIMARY KEY,',
+        '  "name" varchar(250) NOT NULL',
+        ");",
+    ]
+    if categories:
+        header = 'INSERT INTO "Category" ("id", "name") VALUES'
+        rows = [
+            "('"
+            + str(c["id"]).replace("'", "''")
+            + "', '"
+            + str(c.get("name") or "").replace("'", "''")
+            + "')"
+            for c in categories
+        ]
+        lines.append(header + "\n" + ",\n".join(rows))
+        lines.append('ON CONFLICT ("id") DO UPDATE SET "name" = EXCLUDED."name";')
+    return "\n".join(lines)
+
+
+# --------------------------------------------------------------------------- #
 # Geracao de SQL
 # --------------------------------------------------------------------------- #
 def _sql_literal(value: Any, pg_type: str) -> str:
@@ -398,7 +496,17 @@ def main() -> None:
             database_url = DEFAULT_DATABASE_URL
 
     datasets = [(label, _load(path)) for label, path in SOURCES]
+
+    # Enriquecimento de categorias do EcomHub: deriva category_id/category_name
+    # de products_productsCategories antes de montar as colunas/inserts. O
+    # Primecod ja traz category_id/category_name nos proprios registros.
+    for label, records in datasets:
+        if label == "ecomhub":
+            enrich_ecomhub_categories(records)
+
     columns = build_columns(datasets)
+    categories = collect_categories(datasets)
+    categories_sql = build_categories_sql(categories)
 
     if args.schema_only:
         print(build_rebuild_ddl(columns) if args.rebuild else build_ensure_ddl(columns))
@@ -409,6 +517,7 @@ def main() -> None:
     print(f"  compartilhadas entre as origens: {', '.join(shared)}")
     for label, records in datasets:
         print(f"  {label}: {len(records)} registro(s)")
+    print(f"  categorias (tabela Category): {len(categories)}")
 
     if args.rebuild:
         # Modo destrutivo: exige as duas origens com dados (salvo --force).
@@ -421,7 +530,10 @@ def main() -> None:
             )
         ddl = build_rebuild_ddl(columns)
         body, total = build_inserts_all(columns, datasets)
-        sql = _BEGIN + ddl + "\n\n" + body + "\n\nCOMMIT;\n"
+        sql = (
+            _BEGIN + ddl + "\n\n" + body + "\n\n"
+            + categories_sql + "\n\nCOMMIT;\n"
+        )
         action = f"reconstruida (DROP+CREATE) com {total} produto(s)"
     else:
         # Modo padrao NAO-destrutivo: garante schema e atualiza por integracao.
@@ -431,7 +543,10 @@ def main() -> None:
             raise SystemExit(
                 "[abortado] nenhuma origem tem registros; nada a atualizar."
             )
-        sql = _BEGIN + ensure + "\n\n" + refresh + "\n\nCOMMIT;\n"
+        sql = (
+            _BEGIN + ensure + "\n\n" + refresh + "\n\n"
+            + categories_sql + "\n\nCOMMIT;\n"
+        )
         msg = f"atualizada (sem drop); {total} produto(s) em {', '.join(refreshed)}"
         if preserved:
             msg += f"; PRESERVADAS sem alterar: {', '.join(preserved)}"

@@ -43,6 +43,14 @@ PRODUCTS_URL = os.getenv("ECOMHUB_PRODUCTS_URL", "https://go.ecomhub.app/product
 API_PREFIX = os.getenv(
     "ECOMHUB_API_PREFIX", "https://api.ecomhub.app/api/productsWorkspaces"
 )
+CATEGORIES_API = os.getenv(
+    "ECOMHUB_CATEGORIES_URL", "https://api.ecomhub.app/api/productsCategories"
+)
+# Endpoint de detalhe do produto: {PRODUCT_API}/{id} traz o campo `description`
+# (a lista de productsWorkspaces nao traz a descricao).
+PRODUCT_API = os.getenv("ECOMHUB_PRODUCT_URL", "https://api.ecomhub.app/api/products")
+# Quantidade de requisicoes de detalhe em paralelo ao enriquecer descricoes.
+DETAIL_CONCURRENCY = int(os.getenv("ECOMHUB_DETAIL_CONCURRENCY", "10"))
 
 # Banco
 DATABASE_URL = os.getenv("DATABASE_URL", "")

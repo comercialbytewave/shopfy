@@ -11,6 +11,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from . import config
+from .categories import CATEGORY_MODEL
 
 
 @dataclass
@@ -180,8 +181,11 @@ def _generate_schema(columns: list[Column], total_records: int) -> str:
         "",
         '  @@map("products")',
         "}",
+        "",
+        # Tabela de categorias (mesmo modelo em ecomhub e primecod).
+        CATEGORY_MODEL,
     ])
-    
+
     return "\n".join(lines)
 
 

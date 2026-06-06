@@ -110,10 +110,16 @@ def run_capture() -> int:
         json.dumps(all_products, ensure_ascii=False, indent=2),
         encoding="utf-8"
     )
-    
+
+    # Salva as categorias (group by distinto de category_id/category_name).
+    from .categories import CATEGORIES_JSON, save_categories
+
+    saved = save_categories()
+
     print(f"OK! {len(all_products)} produto(s) capturado(s)")
     print(f"  Salvos em: {config.PRODUCTS_JSON}")
-    
+    print(f"  Categorias ({len(saved)}): {CATEGORIES_JSON}")
+
     return len(all_products)
 
 

@@ -203,6 +203,43 @@ def _auth_headers(headers: dict[str, str]) -> dict[str, str]:
 MAX_PAGES = 1000
 
 
+async def _enrich_descriptions(
+    context: Any, records: list[dict[str, Any]], headers: dict[str, str]
+) -> int:
+    """Preenche `description` de cada produto via {PRODUCT_API}/{id}.
+
+    A lista de productsWorkspaces nao traz a descricao; ela so existe no
+    endpoint de detalhe do produto. Busca em paralelo (com limite) reutilizando
+    a mesma sessao autenticada. Produtos cuja chamada falhar ficam sem alterar.
+    """
+    sem = asyncio.Semaphore(max(1, config.DETAIL_CONCURRENCY))
+    filled = 0
+
+    async def one(rec: dict[str, Any]) -> None:
+        nonlocal filled
+        pid = rec.get("id")
+        if not pid:
+            return
+        async with sem:
+            try:
+                resp = await context.request.get(
+                    f"{config.PRODUCT_API}/{pid}", headers=headers, timeout=30000
+                )
+                if resp.status >= 400:
+                    return
+                body = await resp.json()
+            except Exception:
+                return
+        if isinstance(body, dict):
+            desc = body.get("description")
+            if desc is not None and str(desc).strip():
+                rec["description"] = desc
+                filled += 1
+
+    await asyncio.gather(*(one(r) for r in records))
+    return filled
+
+
 async def capture() -> dict[str, Any]:
     """Executa o fluxo completo, pagina via `offset` e retorna todos os registros."""
     # O endpoint /api/products responde de VARIAS formas na mesma pagina:
@@ -365,6 +402,40 @@ async def capture() -> dict[str, Any]:
 
             captured["records"] = all_records
             captured["pages"] = offset
+
+            # ---- Descricoes: enriquece cada produto via /api/products/{id} ----
+            print(
+                f"[3/3] Buscando descricoes de {len(all_records)} produto(s) "
+                f"(concorrencia={config.DETAIL_CONCURRENCY})..."
+            )
+            try:
+                filled = await _enrich_descriptions(context, all_records, headers)
+                print(f"  [descricoes] {filled} produto(s) com descricao preenchida")
+            except Exception as exc:
+                print(f"  [descricoes] falha ao enriquecer descricoes ({exc}); seguindo sem.")
+
+            # ---- Categorias: lista completa via API (mesma sessao autenticada)
+            categories: list[dict[str, Any]] = []
+            try:
+                resp = await context.request.get(
+                    config.CATEGORIES_API, headers=headers, timeout=30000
+                )
+                if resp.status < 400:
+                    body = await resp.json()
+                    if isinstance(body, list):
+                        categories = [c for c in body if isinstance(c, dict)]
+                    print(f"  [categorias] {len(categories)} categoria(s) da API")
+                else:
+                    print(
+                        f"  [categorias] API retornou HTTP {resp.status}; "
+                        f"usara fallback dos produtos."
+                    )
+            except Exception as exc:
+                print(
+                    f"  [categorias] falha ao buscar categorias ({exc}); "
+                    f"usara fallback dos produtos."
+                )
+            captured["categories"] = categories
         finally:
             await context.close()
             await browser.close()
@@ -415,11 +486,102 @@ def run_capture() -> None:
         json.dumps(records, ensure_ascii=False, indent=2), encoding="utf-8"
     )
 
+    # Salva as categorias: lista da API + reforco derivado dos produtos
+    # (deduplicado por id em save_categories).
+    from .categories import CATEGORIES_JSON, categories_from_products, save_categories
+
+    cats = list(result.get("categories") or [])
+    cats += categories_from_products()
+    saved = save_categories(cats)
+
     print(
         f"\nOK! {len(records)} produto(s) capturado(s) em {result.get('pages', 1)} pagina(s).\n"
         f"  - Resposta bruta (1a pagina): {config.RAW_RESPONSE_JSON}\n"
-        f"  - Registros (todas paginas):  {config.PRODUCTS_JSON}"
+        f"  - Registros (todas paginas):  {config.PRODUCTS_JSON}\n"
+        f"  - Categorias ({len(saved)}):          {CATEGORIES_JSON}"
     )
+
+
+async def _fill_descriptions() -> int:
+    """Faz login e preenche `description` no products.json JA capturado.
+
+    Util para enriquecer as descricoes sem refazer a paginacao completa: so
+    faz login, captura os headers de autenticacao da 1a chamada de produtos e
+    busca o detalhe (/api/products/{id}) de cada produto existente.
+    """
+    if not config.PRODUCTS_JSON.exists():
+        raise RuntimeError(
+            f"{config.PRODUCTS_JSON} nao encontrado. Rode a captura primeiro."
+        )
+    records = json.loads(config.PRODUCTS_JSON.read_text(encoding="utf-8"))
+    if not isinstance(records, list) or not records:
+        raise RuntimeError("products.json vazio ou invalido.")
+
+    async with async_playwright() as p:
+        browser = await p.chromium.launch(headless=config.HEADLESS)
+        context = await browser.new_context()
+        page = await context.new_page()
+
+        # Captura os headers de auth da 1a resposta de productsWorkspaces.
+        headers_box: dict[str, dict[str, str]] = {}
+        got_headers = asyncio.Event()
+
+        async def on_response(response: Response) -> None:
+            if response.url.startswith(config.API_PREFIX) and response.request.method == "GET":
+                if "h" not in headers_box:
+                    headers_box["h"] = _auth_headers(await response.request.all_headers())
+                    got_headers.set()
+
+        page.on("response", on_response)
+
+        try:
+            await _do_login(page)
+
+            # Navega ate Produtos para disparar a chamada da API e obter headers.
+            clicked = False
+            for sel in ["a:has-text('Produtos')", "nav >> text=Produtos", "[href*='products']", "text=Produtos"]:
+                loc = page.locator(sel).first
+                try:
+                    if await loc.count() > 0 and await loc.is_visible():
+                        await loc.click()
+                        clicked = True
+                        break
+                except Exception:
+                    continue
+            if not clicked:
+                await page.goto(config.PRODUCTS_URL, wait_until="networkidle")
+
+            try:
+                await asyncio.wait_for(got_headers.wait(), timeout=30)
+            except asyncio.TimeoutError:
+                pass
+            page.remove_listener("response", on_response)
+
+            headers = headers_box.get("h", {})
+            if not headers:
+                raise RuntimeError(
+                    "Nao foi possivel obter os headers de autenticacao. Veja ./debug."
+                )
+
+            print(
+                f"Buscando descricoes de {len(records)} produto(s) "
+                f"(concorrencia={config.DETAIL_CONCURRENCY})..."
+            )
+            filled = await _enrich_descriptions(context, records, headers)
+        finally:
+            await context.close()
+            await browser.close()
+
+    config.PRODUCTS_JSON.write_text(
+        json.dumps(records, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
+    return filled
+
+
+def run_fill_descriptions() -> None:
+    """Ponto de entrada: enriquece as descricoes do products.json existente."""
+    filled = asyncio.run(_fill_descriptions())
+    print(f"\nOK! {filled} produto(s) com descricao preenchida em {config.PRODUCTS_JSON}.")
 
 
 if __name__ == "__main__":

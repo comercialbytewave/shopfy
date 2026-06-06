@@ -13,6 +13,7 @@ from datetime import datetime
 from typing import Any
 
 from . import config
+from .categories import CATEGORY_MODEL
 
 MODEL_NAME = "Product"
 ISO_DATE_RE = re.compile(
@@ -95,12 +96,21 @@ def _load_records() -> list[dict[str, Any]]:
 class Column:
     """Descreve uma coluna final do model (chave original -> campo Prisma)."""
 
-    def __init__(self, key: str, field: str, ptype: str, nullable: bool, is_id: bool) -> None:
+    def __init__(
+        self,
+        key: str,
+        field: str,
+        ptype: str,
+        nullable: bool,
+        is_id: bool,
+        db_type: str | None = None,
+    ) -> None:
         self.key = key            # chave original no JSON
         self.field = field        # nome do campo Prisma (saneado)
         self.ptype = ptype        # tipo Prisma (Int, String, Json, ...)
         self.nullable = nullable
         self.is_id = is_id
+        self.db_type = db_type    # tipo nativo do Postgres (ex.: "VarChar(250)")
 
 
 def analyze() -> tuple[list[Column], bool, int]:
@@ -142,6 +152,18 @@ def analyze() -> tuple[list[Column], bool, int]:
         nullable = info.nullable and not is_id
         columns.append(Column(key, field_name, info.resolve(), nullable, is_id))
 
+    # Colunas de categoria: o EcomHub nao traz category_id/category_name no
+    # nivel do produto; o importador deriva esses valores do campo
+    # products_productsCategories. Garantimos as colunas aqui (category_id como
+    # String VarChar(250), seguindo o mesmo padrao da tabela Category).
+    existing = {c.field for c in columns}
+    if "category_id" not in existing:
+        columns.append(
+            Column("category_id", "category_id", "String", True, False, db_type="VarChar(250)")
+        )
+    if "category_name" not in existing:
+        columns.append(Column("category_name", "category_name", "String", True, False))
+
     return columns, has_natural_id, total
 
 
@@ -175,6 +197,8 @@ def build_schema() -> str:
             attrs.append("@id")
         if col.field != col.key:
             attrs.append(f'@map("{col.key}")')
+        if col.db_type:
+            attrs.append(f"@db.{col.db_type}")
 
         optional = "?" if col.nullable else ""
         type_str = f"{col.ptype}{optional}"
@@ -184,6 +208,9 @@ def build_schema() -> str:
     lines.append("")
     lines.append('  @@map("products")')
     lines.append("}")
+    lines.append("")
+    # Tabela de categorias (mesmo modelo em ecomhub e primecod).
+    lines.append(CATEGORY_MODEL)
     lines.append("")
     return "\n".join(lines)
 

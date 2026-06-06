@@ -5,9 +5,9 @@ from __future__ import annotations
 import os
 from collections import OrderedDict
 
-from flask import Flask, flash, redirect, render_template, request, url_for
+from flask import Flask, flash, jsonify, redirect, render_template, request, url_for
 
-from . import compare, config, db
+from . import compare, config, db, translator
 from .sender import send_skus
 from .shopify_client import ShopifyError
 
@@ -84,6 +84,18 @@ def index():
     rows = db.fetch_statuses(integration, only=only)
     if integration == "ecomhub":
         rows = _group_ecomhub_rows(rows)
+
+    # Anexa descricao + traducao (da tabela products) a cada linha da listagem.
+    # Indexado por product_id (chave natural estavel), nao por pk.
+    text_map = db.get_products_text(integration, [r.get("product_id") for r in rows])
+    for r in rows:
+        info = text_map.get(r.get("product_id")) or {}
+        r["description"] = info.get("description")
+        r["description_translate"] = info.get("description_translate")
+        r["language_translate"] = info.get("language_translate")
+        r["description_upgrade"] = info.get("description_upgrade")
+        r["description_upgrade_translate"] = info.get("description_upgrade_translate")
+
     stats = db.counts(integration)
     return render_template(
         "index.html",
@@ -94,6 +106,8 @@ def index():
         only=only or "all",
         has_creds=config.has_shopify_credentials(),
         store=config.SHOPIFY_STORE_DOMAIN,
+        has_groq=config.has_groq_credentials(),
+        countries=translator.COUNTRIES,
     )
 
 
@@ -130,6 +144,83 @@ def send():
     except Exception as exc:  # noqa: BLE001
         flash(f"Erro ao enviar: {exc}", "err")
     return redirect(url_for("index", integration=integration, only="missing"))
+
+
+@app.route("/translate", methods=["POST"])
+def translate_product():
+    """Traduz a descricao de um produto para o idioma do pais de destino.
+
+    Recebe (form): integration, product_pk, country (codigo). Busca a descricao
+    na tabela products, traduz via Groq, grava em description_translate /
+    language_translate e devolve o texto traduzido em JSON.
+    """
+    integration = request.form.get("integration") or config.INTEGRATIONS[0]
+    product_id = (request.form.get("product_id") or "").strip()
+    country = request.form.get("country", "")
+
+    if not product_id:
+        return jsonify(ok=False, error="Produto inválido."), 400
+
+    language = translator.language_for_country(country)
+    if not language:
+        return jsonify(ok=False, error="País de destino inválido."), 400
+
+    product = db.get_product_description(integration, product_id)
+    if not product:
+        return jsonify(ok=False, error="Produto não encontrado."), 404
+
+    desc = (product.get("description") or "").strip()
+    upgrade = (product.get("description_upgrade") or "").strip()
+    if not desc and not upgrade:
+        return jsonify(ok=False, error="Produto sem descrição para traduzir."), 400
+
+    try:
+        # Traduz a descricao original e, se existir, tambem a descricao melhorada.
+        translated = translator.translate(desc, language) if desc else None
+        upgrade_translation = translator.translate(upgrade, language) if upgrade else None
+    except translator.TranslationError as exc:
+        return jsonify(ok=False, error=str(exc)), 400
+    except Exception as exc:  # noqa: BLE001
+        return jsonify(ok=False, error=f"Erro inesperado: {exc}"), 500
+
+    db.save_translation(integration, product_id, translated, language, upgrade_translation)
+    return jsonify(
+        ok=True,
+        language=language,
+        product_name=product.get("name"),
+        translation=translated,
+        upgrade_translation=upgrade_translation,
+    )
+
+
+@app.route("/improve", methods=["POST"])
+def improve_product():
+    """Melhora a descricao de um produto (persuasiva/SEO) via Groq.
+
+    Recebe (form): integration, product_id. Busca nome + descricao na tabela
+    products, melhora via Groq, grava em description_upgrade e devolve o texto.
+    """
+    integration = request.form.get("integration") or config.INTEGRATIONS[0]
+    product_id = (request.form.get("product_id") or "").strip()
+
+    if not product_id:
+        return jsonify(ok=False, error="Produto inválido."), 400
+
+    product = db.get_product_description(integration, product_id)
+    if not product:
+        return jsonify(ok=False, error="Produto não encontrado."), 404
+
+    try:
+        improved = translator.improve_description(
+            product.get("name") or "", product.get("description") or ""
+        )
+    except translator.TranslationError as exc:
+        return jsonify(ok=False, error=str(exc)), 400
+    except Exception as exc:  # noqa: BLE001
+        return jsonify(ok=False, error=f"Erro inesperado: {exc}"), 500
+
+    db.save_description_upgrade(integration, product_id, improved)
+    return jsonify(ok=True, product_name=product.get("name"), upgrade=improved)
 
 
 def run() -> None:
